@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-parent</artifactId>
+      <version>10</version>
+    </parent>
+
+    <groupId>org.jboss</groupId>
+    <artifactId>patch-repo</artifactId>
+    <version>1.0.0.Alpha1-SNAPSHOT</version>
+
+    <name>jboss patch repository</name>
+    <description>The patch repository</description>
+
+    <properties>
+        <!-- Build configuration -->
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+
+        <!--
+            Dependency versions. Please keep alphabetical.
+
+            Each version property should be of the form "version.<groupId>".
+            For example: <version.org.jboss.as>
+
+            In cases where multiple artifacts use the same groupId but have different
+            versions, add the artifactId or other qualifier to the property name.
+            For example: <version.org.jboss.as.console>
+         -->
+
+        <version.org.wildfly>8.0.0.Alpha3-SNAPSHOT</version.org.wildfly>
+
+        <!-- Surefire args -->
+        <surefire.jpda.args/>
+        <surefire.system.args>-da ${surefire.jpda.args}</surefire.system.args>
+
+        <!-- Checkstyle configuration -->
+        <linkXRef>false</linkXRef>
+        <version.org.apache.httpmime>4.0.1</version.org.apache.httpmime>
+        <version.org.apache.httpcomponents>4.1.3</version.org.apache.httpcomponents>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
+                    <!--suppress MavenModelInspection -->
+                    <groupId>org.eclipse.m2e</groupId>
+                    <!--suppress MavenModelInspection -->
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <!--suppress MavenModelInspection -->
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.apache.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-checkstyle-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [2.5,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>checkstyle</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                        <finalName>tool</finalName>
+                        <outputDirectory>tool/lib</outputDirectory>
+                        <appendAssemblyId>false</appendAssemblyId>
+                        <archive>
+                            <manifest>
+                                <mainClass>org.jboss.as.patching.generator.PatchGenerator</mainClass>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-patching</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
