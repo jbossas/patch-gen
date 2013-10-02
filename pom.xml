@@ -33,6 +33,7 @@
          -->
 
         <version.org.wildfly>8.0.0.Beta1-SNAPSHOT</version.org.wildfly>
+        <version.junit>4.11</version.junit>
 
         <!-- Surefire args -->
         <surefire.jpda.args/>
@@ -114,6 +115,13 @@
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-patching</artifactId>
             <version>${version.org.wildfly}</version>
+        </dependency>
+
+        <dependency>
+           <groupId>junit</groupId>
+           <artifactId>junit</artifactId>
+           <version>${version.junit}</version>
+           <scope>test</scope>
         </dependency>
 
     </dependencies>
