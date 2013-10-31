@@ -27,6 +27,7 @@ import static org.jboss.as.patching.generator.PatchGenerator.processingError;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,9 +58,9 @@ class PatchBundleGenerator {
 
     public static void assemble(final String... args) throws Exception {
 
-        String patch = null;
-        String existing = null;
-        String output = null;
+        String patchArg = null;
+        String existingArg = null;
+        String outputArg = null;
 
         final int argsLength = args.length;
         for (int i = 0; i < argsLength; i++) {
@@ -69,11 +70,11 @@ class PatchBundleGenerator {
                     usage();
                     return;
                 } else if (arg.startsWith("--patch=")) {
-                    patch = arg.substring("--patch=".length());
+                    patchArg = arg.substring("--patch=".length());
                 } else if (arg.startsWith("--existing=")) {
-                    existing = arg.substring("--existing=".length());
+                    existingArg = arg.substring("--existing=".length());
                 } else if (arg.startsWith("--output=")) {
-                    output = arg.substring("--output=".length());
+                    outputArg = arg.substring("--output=".length());
                 } else if (arg.equals("--assemble-patch-bundle")) {
                     continue;
                 } else {
@@ -89,10 +90,10 @@ class PatchBundleGenerator {
         }
 
         final Set<String> missing = new HashSet<String>();
-        if (patch == null) {
+        if (patchArg == null) {
             missing.add("--patch");
         }
-        if (output == null) {
+        if (outputArg == null) {
             missing.add("--output");
         }
         if (! missing.isEmpty()) {
@@ -103,18 +104,27 @@ class PatchBundleGenerator {
         final PatchBundleGenerator gen = new PatchBundleGenerator();
         gen.createTempStructure(UUID.randomUUID().toString());
 
-        final File p = new File(patch);
-        final File e = existing == null ? null : new File(existing);
-        final File t = new File(output);
+        final List<File> patches = new ArrayList<File>();
+        final String[] s = patchArg.split(File.separator);
+        for (String p : s) {
+            final File f = new File(p);
+            if (! f.isFile()) {
+                throw new FileNotFoundException(f.getAbsolutePath());
+            }
+            patches.add(f);
+        }
+
+        final File e = existingArg == null ? null : new File(existingArg);
+        final File t = new File(outputArg);
 
         try {
-            gen.assemble(p, e, t);
+            gen.assemble(patches, e, t);
         } finally {
             IoUtils.recursiveDelete(gen.tmp);
         }
     }
 
-    public void assemble(final File patch, final File existing, final File target) throws IOException, XMLStreamException, PatchingException {
+    public void assemble(final List<File> patches, final File existing, final File target) throws IOException, XMLStreamException, PatchingException {
 
         final File multiPatchContent = new File(tmp, "patch-bundle-content");
         multiPatchContent.mkdir();
@@ -139,19 +149,23 @@ class PatchBundleGenerator {
             };
         }
 
-        final File patchContent = new File(tmp, "patch-content");
-        ZipUtils.unzip(patch, patchContent);
-
-        final File patchXml = new File(patchContent, PatchXml.PATCH_XML);
-        final Patch patchMetadata = PatchXml.parse(patchXml).resolvePatch(null, null);
-        final String patchID = patchMetadata.getPatchId();
-        final String patchPath = patchID + ".zip";
-
+        int i = 0;
         final List<BundledPatch.BundledPatchEntry> entries = new ArrayList<BundledPatch.BundledPatchEntry>(metadata.getPatches());
-        entries.add(new BundledPatch.BundledPatchEntry(patchID, patchPath));
+        for (final File patch : patches) {
+            final File patchContent = new File(tmp, "patch-content-" + i);
+            ZipUtils.unzip(patch, patchContent);
 
-        final File patchTarget = new File(multiPatchContent, patchPath);
-        IoUtils.copyFile(patch, patchTarget);
+            final File patchXml = new File(patchContent, PatchXml.PATCH_XML);
+            final Patch patchMetadata = PatchXml.parse(patchXml).resolvePatch(null, null);
+            final String patchID = patchMetadata.getPatchId();
+            final String patchPath = patchID + ".zip";
+
+            entries.add(new BundledPatch.BundledPatchEntry(patchID, patchPath));
+
+            final File patchTarget = new File(multiPatchContent, patchPath);
+            IoUtils.copyFile(patch, patchTarget);
+            i++;
+        }
 
         final OutputStream os = new FileOutputStream(multiPatchXml);
         try {
