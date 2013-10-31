@@ -129,7 +129,7 @@ public class PatchGenerator {
             if (patchConfig.getPatchType() == Patch.PatchType.CUMULATIVE) {
                 // CPs need to upgrade
                 if (base.getVersion().equals(updated.getVersion())) {
-                    throw processingError("cumulative patch does not upgrade version %s", base.getVersion());
+                    System.out.println("WARN: cumulative patch does not upgrade version " + base.getVersion());
                 }
                 builder.upgradeIdentity(base.getName(), base.getVersion(), updated.getVersion());
             } else {
