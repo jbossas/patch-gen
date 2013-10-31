@@ -105,7 +105,7 @@ class PatchBundleGenerator {
         gen.createTempStructure(UUID.randomUUID().toString());
 
         final List<File> patches = new ArrayList<File>();
-        final String[] s = patchArg.split(File.separator);
+        final String[] s = patchArg.split(File.pathSeparator);
         for (String p : s) {
             final File f = new File(p);
             if (! f.isFile()) {
