@@ -24,6 +24,7 @@ package org.jboss.as.patching.generator;
 
 import static java.lang.System.getProperty;
 import static java.lang.System.getSecurityManager;
+import static java.lang.System.in;
 import static java.security.AccessController.doPrivileged;
 
 import javax.xml.stream.XMLStreamException;
@@ -67,17 +68,19 @@ public class PatchGenerator {
         }
     }
 
+    private final boolean includeVersion;
     private final File patchConfigFile;
     private File oldRoot;
     private File newRoot;
     private File patchFile;
     private File tmp;
 
-    private PatchGenerator(File patchConfig, File oldRoot, File newRoot, File patchFile) {
+    private PatchGenerator(File patchConfig, File oldRoot, File newRoot, File patchFile, boolean includeVersion) {
         this.patchConfigFile = patchConfig;
         this.oldRoot = oldRoot;
         this.newRoot = newRoot;
         this.patchFile = patchFile;
+        this.includeVersion = includeVersion;
     }
 
     private void process() throws IOException, XMLStreamException {
@@ -107,9 +110,14 @@ public class PatchGenerator {
 
             createTempStructure(patchConfig.getPatchId());
 
+            // See whether to include the updated version information
+            boolean includeVersion = patchConfig.getPatchType() == Patch.PatchType.CUMULATIVE ? true : this.includeVersion;
+            final String[] ignored = includeVersion ? new String[0] : new String[] {"org/jboss/as/product", "org/jboss/as/version"};
+
             // Create the distributions
-            final Distribution base = Distribution.create(oldRoot);
-            final Distribution updated = Distribution.create(newRoot);
+            final Distribution base = Distribution.create(oldRoot, ignored);
+            final Distribution updated = Distribution.create(newRoot, ignored);
+
             if (!base.getName().equals(updated.getName())) {
                 throw processingError("distribution names don't match, expected: %s, but was %s ", base.getName(), updated.getName());
             }
@@ -137,7 +145,7 @@ public class PatchGenerator {
             }
 
             // Create the resulting patch
-            final Patch patch = builder.compare(base, updated);
+            final Patch patch = builder.compare(base, updated, includeVersion);
 
             // Copy the contents to the temp dir structure
             PatchContentWriter.process(tmp, newRoot, patch);
@@ -188,6 +196,7 @@ public class PatchGenerator {
         File oldFile = null;
         File newFile = null;
         File patchFile = null;
+        boolean includeVersion = false;
 
         final int argsLength = args.length;
         for (int i = 0; i < argsLength; i++) {
@@ -246,6 +255,8 @@ public class PatchGenerator {
                         usage();
                         return null;
                     }
+                } else if (arg.equals("--include-version")) {
+                    includeVersion = true;
                 } else if (arg.equals("--create-template")) {
                     TemplateGenerator.generate(args);
                     return null;
@@ -266,7 +277,7 @@ public class PatchGenerator {
             return null;
         }
 
-        return new PatchGenerator(patchConfig, oldFile, newFile, patchFile);
+        return new PatchGenerator(patchConfig, oldFile, newFile, patchFile, includeVersion);
     }
 
     private static void usage() {

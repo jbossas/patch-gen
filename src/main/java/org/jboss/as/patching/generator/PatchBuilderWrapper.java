@@ -56,8 +56,8 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
      * @param updated the updated distribution
      * @return the generated patch
      */
-    protected Patch compare(Distribution base, Distribution updated) {
-        compare(this, base, updated);
+    protected Patch compare(Distribution base, Distribution updated, boolean includeVersion) {
+        compare(this, base, updated, includeVersion);
         return build();
     }
 
@@ -128,7 +128,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
      * @param original the original distribution
      * @param updated  the updated distribution
      */
-    static void compare(final PatchBuilderWrapper builder, final Distribution original, final Distribution updated) {
+    static void compare(final PatchBuilderWrapper builder, final Distribution original, final Distribution updated, final boolean includeVersion) {
 
         // Compare misc files
         final DistributionContentItem or = original.getRoot();
@@ -151,7 +151,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
                 updatedLayer = null;
             }
             //
-            compareLayer(elementBuilder, originalLayer, updatedLayer);
+            compareLayer(elementBuilder, originalLayer, updatedLayer, includeVersion);
         }
 
         for (final String layer : updatedLayers) {
@@ -159,7 +159,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
             final Distribution.ProcessedLayer updatedLayer = updated.getLayer(layer);
             final PatchElementBuilder elementBuilder = builder.addLayer(layer);
             //
-            compareLayer(elementBuilder, originalLayer, updatedLayer);
+            compareLayer(elementBuilder, originalLayer, updatedLayer, includeVersion);
         }
 
         // Compare add-ons
@@ -178,12 +178,12 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
                 updatedLayer = null;
             }
             //
-            compareLayer(elementBuilder, originalLayer, updatedLayer);
+            compareLayer(elementBuilder, originalLayer, updatedLayer, includeVersion);
         }
 
         for (final String addOn : updatedAddOns) {
             final PatchElementBuilder elementBuilder = builder.addAddOn(addOn);
-            compareLayer(elementBuilder, null, updated.getAddOn(addOn));
+            compareLayer(elementBuilder, null, updated.getAddOn(addOn), includeVersion);
         }
 
     }
@@ -195,9 +195,9 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
      * @param originalLayer  the original layer
      * @param updatedLayer   the updated layer
      */
-    static void compareLayer(final PatchElementBuilder elementBuilder, final Distribution.ProcessedLayer originalLayer, final Distribution.ProcessedLayer updatedLayer) {
-        compareModuleItems(elementBuilder, originalLayer.getModules(), updatedLayer.getModules(), false); // Modules
-        compareModuleItems(elementBuilder, originalLayer.getBundles(), updatedLayer.getBundles(), true);  // Bundles
+    static void compareLayer(final PatchElementBuilder elementBuilder, final Distribution.ProcessedLayer originalLayer, final Distribution.ProcessedLayer updatedLayer, boolean includeVersion) {
+        compareModuleItems(elementBuilder, originalLayer.getModules(), updatedLayer.getModules(), false, includeVersion); // Modules
+        compareModuleItems(elementBuilder, originalLayer.getBundles(), updatedLayer.getBundles(), true, false);  // Bundles
     }
 
     /**
@@ -209,7 +209,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
      * @param bundle         whether is a bundle or module
      */
     static void compareModuleItems(final PatchElementBuilder elementBuilder, final Collection<DistributionModuleItem> original,
-                                   final Collection<DistributionModuleItem> updated, boolean bundle) {
+                                   final Collection<DistributionModuleItem> updated, boolean bundle, boolean includeVersion) {
 
         final Map<String, DistributionModuleItem> modules = new HashMap<String, DistributionModuleItem>();
         for (final DistributionModuleItem item : updated) {
@@ -224,11 +224,20 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
                 } else {
                     elementBuilder.removeModule(o.getName(), o.getSlot(), o.getMetadataHash());
                 }
-            } else if (!Arrays.equals(n.getComparisonHash(), o.getComparisonHash())) {
-                if (bundle) {
-                    elementBuilder.modifyBundle(n.getName(), n.getSlot(), o.getMetadataHash(), n.getMetadataHash());
+            } else {
+                if (!Arrays.equals(n.getComparisonHash(), o.getComparisonHash())) {
+                    if (bundle) {
+                        elementBuilder.modifyBundle(n.getName(), n.getSlot(), o.getMetadataHash(), n.getMetadataHash());
+                    } else {
+                        elementBuilder.modifyModule(n.getName(), n.getSlot(), o.getMetadataHash(), n.getMetadataHash());
+                    }
                 } else {
-                    elementBuilder.modifyModule(n.getName(), n.getSlot(), o.getMetadataHash(), n.getMetadataHash());
+                    // Treat the version module separately, since the comparison hash will ignore the version property in the manifest
+                    if (includeVersion && n.getName().equals("org.jboss.as.version")) {
+                        if (! Arrays.equals(o.getMetadataHash(), n.getMetadataHash())) {
+                            elementBuilder.modifyModule(n.getName(), n.getSlot(), o.getMetadataHash(), n.getMetadataHash());
+                        }
+                    }
                 }
             }
         }

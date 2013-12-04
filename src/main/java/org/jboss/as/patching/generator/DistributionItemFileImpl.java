@@ -24,16 +24,10 @@ package org.jboss.as.patching.generator;
 
 import static org.jboss.as.patching.generator.PatchGenerator.processingError;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 
 import org.jboss.as.patching.HashUtils;
 
@@ -81,13 +75,8 @@ class DistributionItemFileImpl extends DistributionContentItem {
 
     @Override
     public byte[] getComparisonHash() {
-        final String name = file.getName();
         try {
-            if (name.endsWith(".jar")) {
-                return internalJarComparison(file);
-            } else {
-                return getMetadataHash();
-            }
+            return JarDiffUtils.calculateHash(file, this);
         } catch (Exception e) {
             throw processingError(e, "failed to generate hash");
         }
@@ -101,60 +90,6 @@ class DistributionItemFileImpl extends DistributionContentItem {
     @Override
     public Set<DistributionContentItem> getChildren() {
         return children;
-    }
-
-    /**
-     * Internally compute the hash used for jar comparison.
-     * <p/>
-     * https://github.com/beachhouse/jboss-beach-jar-digest
-     * <p/>
-     * TODO we also need a way to do something similar for modules, since a hash for jar is not enough. We probably
-     * need to include all .jars, resources and parts of module.xml (not <resources /> which are by name changes).
-     *
-     * @param file the jar file
-     * @return the hash
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
-     */
-    protected static byte[] internalJarComparison(final File file) throws NoSuchAlgorithmException, IOException {
-        // TODO: make the algorithm choice configurable
-        final MessageDigest jarDigest = MessageDigest.getInstance("SHA1");
-        final MessageDigest digest = MessageDigest.getInstance("SHA1");
-        final JarInputStream in = new JarInputStream(new BufferedInputStream(new FileInputStream(file)));
-        try {
-            JarEntry entry;
-            while ((entry = in.getNextJarEntry()) != null) {
-                // do not hash directories
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                final String name = entry.getName();
-                // do not hash information added by jarsigner
-                if (name.startsWith("META-INF/")) {
-                    if (name.endsWith(".SF") || name.endsWith(".DSA"))
-                        continue;
-                }
-                if (name.equals("META-INF/INDEX.LIST")) {
-                    continue;
-                }
-                // do not hash timestamped maven artifacts
-                // TODO: make this optional, enabled by default
-                if (name.startsWith("META-INF/maven/") && name.endsWith("/pom.properties")) {
-                    continue;
-                }
-                digest.reset();
-                final byte[] buf = new byte[4096];
-                int l;
-                while ((l = in.read(buf)) > 0) {
-                    digest.update(buf, 0, l);
-                }
-                final byte[] d = digest.digest();
-                jarDigest.update(d);
-            }
-        } finally {
-            in.close();
-        }
-        return jarDigest.digest();
     }
 
 }

@@ -58,8 +58,13 @@ class Distribution {
      * @return the processed distribution
      * @throws IOException
      */
-    public static Distribution create(final File file) throws IOException {
+    public static Distribution create(final File file, final String... ignored) throws IOException {
         final Distribution distribution = new Distribution();
+        if (ignored != null) {
+            for (String ignore : ignored) {
+                distribution.structure.registerIgnoredPath(ignore);
+            }
+        }
         DistributionProcessor.process(distribution.ROOT, file, distribution);
         return distribution;
     }
@@ -242,8 +247,8 @@ class Distribution {
         protected DistributionModuleItem createDistributionModuleItem(final DistributionContentItem item) {
             final String moduleName = item.getParent().getPath('.');
             final String slot = item.getName();
-            final byte[] metadata = item.getComparisonHash();
-            final byte[] comparison = item.getComparisonHash(); // TODO calculate module hash !!
+            final byte[] metadata = item.getMetadataHash();
+            final byte[] comparison = item.getComparisonHash();
             return new DistributionModuleItem(moduleName, slot, comparison, metadata);
         }
 
