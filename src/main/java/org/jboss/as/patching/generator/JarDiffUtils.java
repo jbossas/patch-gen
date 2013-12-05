@@ -28,6 +28,7 @@ class JarDiffUtils {
     static {
 
         ignoredManifestAttributes.add("Archiver-Version");
+        ignoredManifestAttributes.add("Bnd-LastModified");
         ignoredManifestAttributes.add("Built-By");
         ignoredManifestAttributes.add("Build-Jdk");
         ignoredManifestAttributes.add("Build-Timestamp");
@@ -41,8 +42,6 @@ class JarDiffUtils {
         ignoredManifestAttributes.add("Os-Version");
         ignoredManifestAttributes.add("Scm-Revision");
         ignoredManifestAttributes.add("Specification-Version");
-
-        ignoredManifestAttributes.add("Bnd-LastModified");
 
     }
 
@@ -62,7 +61,7 @@ class JarDiffUtils {
 
             final File moduleXml = new File(root, "module.xml");
             if (moduleXml.exists()) {
-                return ModuleDiffUtils.processModule(root, item.getParent().getPath('.'));
+                return ModuleDiffUtils.processModule(root, item.getParent().getPath('.'), item.getMetadataHash());
             } else if (root.getName().equals(".jar")) {
                 return internalJarComparison(root);
             } else {

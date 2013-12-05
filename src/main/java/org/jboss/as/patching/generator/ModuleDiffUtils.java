@@ -31,11 +31,16 @@ class ModuleDiffUtils implements XMLStreamConstants {
      *
      * @param root          the module root
      * @param moduleName    the module name
+     * @param metadataHash  the hash used for the metadata
      * @return the comparison hash for the module
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
-    public static byte[] processModule(final File root, final String moduleName) throws IOException, NoSuchAlgorithmException {
+    public static byte[] processModule(final File root, final String moduleName, final byte[] metadataHash) throws IOException, NoSuchAlgorithmException {
+
+        if (! moduleName.startsWith("org.jboss.as")) {
+            return metadataHash;
+        }
 
         final File moduleXml = new File(root, "module.xml");
         if (! moduleXml.isFile()) {
