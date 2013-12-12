@@ -26,6 +26,7 @@ import static org.jboss.as.patching.generator.PatchGenerator.processingError;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -50,6 +51,14 @@ import org.jboss.modules.ModuleLoader;
 class DistributionProcessor {
 
     private Set<DistributionContentItem> moduleRoots = new LinkedHashSet<DistributionContentItem>();
+
+    // Maybe fail if we find an overlay directory
+    private final FilenameFilter OVERLAYS_FILTER = new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+            return !name.equals(".overlays");
+        }
+    };
 
     /**
      * Process a distribution root.
@@ -209,7 +218,7 @@ class DistributionProcessor {
             }
             context.addModule(item);
         }
-        final File[] children = root.listFiles();
+        final File[] children = root.listFiles(OVERLAYS_FILTER);
         if (children != null && children.length != 0) {
             for (final File child : children) {
                 processModules(item, child, context);
@@ -227,7 +236,7 @@ class DistributionProcessor {
     void processBundles(final DistributionContentItem parent, final File root, final ModuleContext context) {
 
         final DistributionContentItem item = new DistributionItemFileImpl(root, parent);
-        final File[] children = root.listFiles();
+        final File[] children = root.listFiles(OVERLAYS_FILTER);
         if (children != null && children.length != 0) {
             for (final File child : children) {
                 if (!child.isDirectory()) {
