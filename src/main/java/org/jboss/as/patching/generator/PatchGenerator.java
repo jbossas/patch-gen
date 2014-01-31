@@ -24,8 +24,6 @@ package org.jboss.as.patching.generator;
 
 import static java.lang.System.getProperty;
 import static java.lang.System.getSecurityManager;
-import static java.lang.System.in;
-import static java.security.AccessController.doPrivileged;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.BufferedInputStream;
@@ -42,9 +40,7 @@ import org.jboss.as.patching.PatchMessages;
 import org.jboss.as.patching.ZipUtils;
 import org.jboss.as.patching.metadata.Patch;
 import org.jboss.as.version.ProductConfig;
-import org.jboss.as.version.Usage;
 import org.jboss.modules.Module;
-import org.wildfly.security.manager.ReadPropertyAction;
 
 /**
  * Generates a patch archive.
@@ -204,7 +200,7 @@ public class PatchGenerator {
             try {
                 if ("--version".equals(arg) || "-v".equals(arg)
                         || "-version".equals(arg) || "-V".equals(arg)) {
-                    final String homeDir = getSecurityManager() == null ? getProperty("jboss.home.dir") : doPrivileged(new ReadPropertyAction("jboss.home.dir"));
+                    final String homeDir = getSecurityManager() == null ? getProperty("jboss.home.dir") : Usage.getSystemProperty("jboss.home.dir");
                     ProductConfig productConfig = new ProductConfig(Module.getBootModuleLoader(), homeDir, Collections.emptyMap());
                     System.out.println(productConfig.getPrettyVersionString());
                     return null;
