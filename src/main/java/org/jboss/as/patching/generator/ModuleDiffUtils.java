@@ -23,6 +23,8 @@ class ModuleDiffUtils implements XMLStreamConstants {
 
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
 
+    protected static volatile boolean deepInspection = false;
+
     /**
      * Process a module.
      *
@@ -38,7 +40,7 @@ class ModuleDiffUtils implements XMLStreamConstants {
      */
     public static byte[] processModule(final File root, final String moduleName, final byte[] metadataHash) throws IOException, NoSuchAlgorithmException {
 
-        if (! moduleName.startsWith("org.jboss.as")) {
+        if (! deepInspection) {
             return metadataHash;
         }
 

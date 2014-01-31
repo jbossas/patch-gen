@@ -251,6 +251,8 @@ public class PatchGenerator {
                         usage();
                         return null;
                     }
+                } else if (arg.equals("--detailed-inspection")) {
+                    ModuleDiffUtils.deepInspection = true;
                 } else if (arg.equals("--include-version")) {
                     includeVersion = true;
                 } else if (arg.equals("--create-template")) {
@@ -297,6 +299,9 @@ public class PatchGenerator {
 
         usage.addArguments("-v", "--version");
         usage.addInstruction(PatchMessages.MESSAGES.argVersion());
+
+        usage.addArguments("--detailed-inspection");
+        usage.addInstruction("Enable detailed inspection for all modules.");
 
         String headline = usage.getDefaultUsageHeadline("patch-gen");
         System.out.print(usage.usage(headline));
