@@ -28,6 +28,8 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 
 import org.jboss.as.patching.Constants;
@@ -61,6 +63,8 @@ import org.jboss.as.patching.runner.PatchContentLoader;
  */
 abstract class PatchContentWriter {
 
+    private static final String README = "README.txt";
+
     abstract File getSourceFile(final ContentItem item) throws IOException;
 
     abstract File getTargetFile(final ContentItem item) throws IOException;
@@ -90,6 +94,20 @@ abstract class PatchContentWriter {
     static void process(final File targetRoot, final File distributionRoot, final Patch patch) throws IOException, XMLStreamException {
         try {
             targetRoot.mkdirs();
+
+            final InputStream is = PatchContentWriter.class.getClassLoader().getResourceAsStream(README);
+            try {
+                final File readme = new File(targetRoot, README);
+                final OutputStream os = new FileOutputStream(readme);
+                try {
+                    IoUtils.copyStream(is, os);
+                } finally {
+                    IoUtils.safeClose(os);
+                }
+            } finally {
+                IoUtils.safeClose(is);
+            }
+
             // Write the patch xml
             final File patchXml = new File(targetRoot, PatchXml.PATCH_XML);
             final FileOutputStream os = new FileOutputStream(patchXml);
