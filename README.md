@@ -26,6 +26,7 @@ You probably want to use the shaded jar, which is executable and contains all of
 
 #### Build from source
     git clone https://github.com/jbossas/patch-gen.git
+    cd patch-gen/
     mvn package
 
 The jars will be located in the `target/` subdirectory.
