@@ -1,15 +1,45 @@
-# patch generation tool
+# JBoss AS / Wildfly Patch Generation Tool
 
-### Steps creating a patch
+## Usage
 
-1) `git clone https://github.com/emuckenhuber/patch-gen`
+Options are not optional and must exactly follow this format: `--optionname=value`. The `=` must be present when there is a value. There are no short forms for the option names.
 
-2) `alias patch-gen=/path/to/patch-gen/tool/tool.sh`
+In the following sections, substitute `patch-gen` for `java -jar patch-gen-*-shaded.jar`, or set up an alias with
 
-3) `cd /your/home/patches`
+    alias patch-gen='java -jar patch-gen-*-shaded.jar'
 
-4) edit patch-config-wildfly-CR2-patch.xml
+### Patch Generation
+    patch-gen --applies-to-dist=~/wildfly/wildfly-8.0.0.Final --updated-dist=~/wildfly/wildfly-8.1.0.CR2 --patch-config=patch-config-wildfly-CR2-patch.xml --output-file=wildfly-8.1.0.CR2.patch.zip
 
+`--applies-to-dist` and `--updated-dist` must point exactly at the root of the distributions (the directory containing bin, modules, domain, etc.), otherwise the tool will crash.
+
+### Configuration Templating
+
+#### One off
+    patch-gen --create-template --one-off my-custom-patch
+
+#### Cumulative
+    patch-gen --create-template --cumulative my-custom-patch
+
+### Getting an executable jar
+You probably want to use the shaded jar, which is executable and contains all of its dependencies.
+
+#### Build from source
+    git clone https://github.com/jbossas/patch-gen.git
+    mvn package
+
+The jars will be located in the `target/` subdirectory.
+
+#### Download from Github
+    curl -LO 'https://github.com/jbossas/patch-gen/releases/download/1.0/patch-gen-1.0-shaded.jar'
+
+## Patch Workflow
+
+1. Run the command specified in the Configuration Templating section.
+2. Edit the configuration file.
+```
+$EDITOR patch-config-wildfly-CR2-patch.xml
+```
 ```xml
 <?xml version='1.0' encoding='UTF-8'?>
 <patch-config xmlns="urn:jboss:patch-config:1.0">
@@ -23,19 +53,10 @@
    <generate-by-diff />
 </patch-config>
 ```
-
-5) `patch-gen --applies-to-dist=/your/home/Downloads/wildfly/wildfly-8.0.0.Final --updated-dist=/your/home/Downloads/wildfly/wildfly-8.1.0.CR2 --patch-config=patch-config-wildfly-CR2-patch.xml --output-file=wildfly-8.1.0.CR2.patch.zip`
-
-6) maybe edit README.txt in the wildfly-8.1.0.CR2.patch.zip 
-
-
-
-### create template for one off or cumulative patch:
-
-`sh tool.sh --create-template --one-off    my-custom-patch`
-
-`sh tool.sh --create-template --cumulative my-custom-patch`
-
-### compare distributions
-
-`sh tool.sh --applies-to-dist=/path/to/old/distribution --updated-dist=/path/to/new/distribution --patch-config=patch-config-my-custom-patch.xml --output-file=my-custom-patch.zip`
+3. Run the command specified in the Patch Generation section.
+4. Optionally, edit README.txt in the zip.
+```
+unzip -qo patch.zip README.txt
+$EDITOR README.txt
+zip -qu patch.zip README.txt
+```
