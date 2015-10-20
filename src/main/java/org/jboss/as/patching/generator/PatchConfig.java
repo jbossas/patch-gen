@@ -108,6 +108,16 @@ public interface PatchConfig {
     Collection<PatchElementConfig> getElements();
 
     /**
+     * Returns a collection of optional paths. I.e. filesystem paths for which
+     * patch updates should be generated and included but that might be missing
+     * in the target installation and in that case be skipped instead of aborting
+     * the whole patch altogether.
+     *
+     * @return  optional paths
+     */
+    Collection<OptionalPath> getOptionalPaths();
+
+    /**
      * Create a {@link PatchBuilderWrapper} whose basic metadata matches what's configured in this object.
      *
      * @return the patch builder

@@ -67,7 +67,9 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         MODULES("modules"),
         NAME("name"),
         ONE_OFF("one-off"),
+        OPTIONAL_PATHS("optional-paths"),
         PATCH_CONFIG("patch-config"),
+        PATH("path"),
         REMOVED("removed"),
         SPECIFIED_CONTENT("specified-content"),
         UPDATED("updated"),
@@ -106,8 +108,10 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         NAME("name"),
         PATCH_ID("patch-id"),
         PATH("path"),
+        REQUIRES("requires"),
         RESULTING_VERSION("resulting-version"),
         SLOT("slot"),
+        VALUE("value"),
 
         // default unknown attribute
         UNKNOWN(null);
@@ -164,6 +168,9 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
                     break;
                 case MISC_FILES:
                     parseMiscFiles(reader, patchConfigBuilder);
+                    break;
+                case OPTIONAL_PATHS:
+                    parseOptionalPaths(reader, patchConfigBuilder);
                     break;
                 default:
                     throw unexpectedElement(reader);
@@ -597,7 +604,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
                                        final PatchConfigBuilder builder) throws XMLStreamException {
 
         String path = null;
-        boolean directory = false;
+        boolean directory;
         boolean affectsRuntime = false;
 
         final int count = reader.getAttributeCount();
@@ -634,6 +641,38 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         builder.getSpecifiedContent().add(item);
     }
 
+    private void parseOptionalPaths(final XMLExtendedStreamReader reader, final PatchConfigBuilder builder) throws XMLStreamException {
+        while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+            final Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+                case PATH:
+                    parseOptionalPath(reader, builder);
+                    break;
+                default:
+                    throw unexpectedElement(reader);
+            }
+        }
+    }
 
-
+    private void parseOptionalPath(final XMLExtendedStreamReader reader, final PatchConfigBuilder builder) throws XMLStreamException {
+        final int count = reader.getAttributeCount();
+        String value = null;
+        String requires = null;
+        for (int i = 0; i < count; i++) {
+            final String attrValue = reader.getAttributeValue(i);
+            final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case VALUE:
+                    value = attrValue;
+                    break;
+                case REQUIRES:
+                    requires = attrValue;
+                    break;
+                default:
+                    throw unexpectedAttribute(reader, i);
+            }
+        }
+        builder.addOptionalPath(value, requires);
+        requireNoContent(reader);
+    }
 }
