@@ -29,7 +29,7 @@ import java.io.Writer;
 import java.util.UUID;
 
 import org.jboss.as.patching.IoUtils;
-import org.jboss.as.patching.PatchMessages;
+import org.jboss.as.patching.logging.PatchLogger;
 
 /**
  * Generate a simple template for a give patch type.
@@ -78,12 +78,12 @@ class TemplateGenerator {
                 } else if (arg.equals("--create-template")) {
                     continue;
                 } else {
-                    System.err.println(PatchMessages.MESSAGES.argumentExpected(arg));
+                    System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                     usage();
                     return null;
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.println(PatchMessages.MESSAGES.argumentExpected(arg));
+                System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                 usage();
                 return null;
             }

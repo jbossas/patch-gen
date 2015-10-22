@@ -42,16 +42,17 @@ public class PatchConfigXml {
     private static final XMLMapper MAPPER = XMLMapper.Factory.create();
     private static final PatchConfigXml_1_0 INSTANCE = new PatchConfigXml_1_0();
     private static final XMLInputFactory INPUT_FACTORY = XMLInputFactory.newInstance();
-    private static final QName ROOT_ELEMENT = new QName(Namespace.PATCH_1_0.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name);
 
     static {
-        MAPPER.registerRootElement(ROOT_ELEMENT, INSTANCE);
+        MAPPER.registerRootElement(new QName(Namespace.PATCH_1_0.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name), INSTANCE);
+        MAPPER.registerRootElement(new QName(Namespace.PATCH_1_2.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name), INSTANCE);
     }
 
     enum Namespace {
 
         PATCH_1_0("urn:jboss:patch-config:1.0"),
-        UNKNOWN(null),;
+        PATCH_1_2("urn:jboss:patch-config:1.2"),
+        UNKNOWN(null);
 
         private final String namespace;
 

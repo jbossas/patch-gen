@@ -25,6 +25,7 @@ package org.jboss.as.patching.generator;
 import static org.jboss.as.patching.generator.PatchGenerator.processingError;
 
 import javax.xml.stream.XMLStreamException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,9 +41,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.jboss.as.patching.IoUtils;
-import org.jboss.as.patching.PatchMessages;
 import org.jboss.as.patching.PatchingException;
 import org.jboss.as.patching.ZipUtils;
+import org.jboss.as.patching.logging.PatchLogger;
 import org.jboss.as.patching.metadata.BundledPatch;
 import org.jboss.as.patching.metadata.Patch;
 import org.jboss.as.patching.metadata.PatchBundleXml;
@@ -78,12 +79,12 @@ class PatchBundleGenerator {
                 } else if (arg.equals("--assemble-patch-bundle")) {
                     continue;
                 } else {
-                    System.err.println(PatchMessages.MESSAGES.argumentExpected(arg));
+                    System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                     usage();
                     return;
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.println(PatchMessages.MESSAGES.argumentExpected(arg));
+                System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                 usage();
                 return;
             }
@@ -97,7 +98,7 @@ class PatchBundleGenerator {
             missing.add("--output");
         }
         if (! missing.isEmpty()) {
-            System.err.println(PatchMessages.MESSAGES.missingRequiredArgs(missing));
+            System.err.println(PatchLogger.ROOT_LOGGER.missingRequiredArgs(missing));
             return;
         }
 

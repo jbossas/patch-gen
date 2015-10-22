@@ -26,8 +26,10 @@ import static org.jboss.as.patching.generator.PatchGenerator.processingError;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -63,6 +65,7 @@ class PatchConfigBuilder implements ContentItemFilter {
     private Set<String> runtimeUseItems = new HashSet<String>();
     private Set<ContentItem> specifiedContent = new HashSet<ContentItem>();
     private Map<String, PatchElementConfigBuilder> elements = new LinkedHashMap<String, PatchElementConfigBuilder>();
+    private List<OptionalPath> optionalPaths = Collections.emptyList();
 
     PatchConfigBuilder setPatchId(String patchId) {
         this.patchId = patchId;
@@ -132,6 +135,24 @@ class PatchConfigBuilder implements ContentItemFilter {
         return builder;
     }
 
+    PatchConfigBuilder addOptionalPath(String path) {
+        return addOptionalPath(path, null);
+    }
+
+    PatchConfigBuilder addOptionalPath(String path, String requires) {
+        final OptionalPath op = new OptionalPath(path, requires);
+        switch(optionalPaths.size()) {
+            case 0:
+                optionalPaths = Collections.singletonList(op);
+                break;
+            case 1:
+                optionalPaths = new ArrayList<OptionalPath>(optionalPaths);
+            default:
+                optionalPaths.add(op);
+        }
+        return this;
+    }
+
     PatchConfig build() {
         return new PatchConfigImpl(new ArrayList<PatchElementConfig>(elements.values()));
     }
@@ -195,6 +216,11 @@ class PatchConfigBuilder implements ContentItemFilter {
         }
 
         @Override
+        public Collection<OptionalPath> getOptionalPaths() {
+            return optionalPaths;
+        }
+
+        @Override
         public PatchBuilderWrapper toPatchBuilder() {
             final PatchBuilderWrapper wrapper = new PatchBuilderWrapper() {
                 @Override
@@ -204,7 +230,8 @@ class PatchConfigBuilder implements ContentItemFilter {
                     }
                     final PatchElementConfigBuilder config = PatchConfigBuilder.this.elements.get(name);
                     if (config == null) {
-                        throw processingError("missing patch-config for layer %s", name);
+                        return null;
+                        //throw processingError("missing patch-config for layer %s", name);
                     }
                     final PatchElementBuilder builder;
                     if (config.getPatchType() == null) {

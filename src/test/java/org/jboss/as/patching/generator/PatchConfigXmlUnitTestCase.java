@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -204,6 +205,29 @@ public class PatchConfigXmlUnitTestCase {
 //
 //        Set<String> validInUse = new HashSet<String>(Arrays.asList("test/file3", "test/file5"));
 //        validateInRuntimeUse(patchConfig, validInUse);
+    }
+
+    @Test
+    public void testOptionalPaths() throws Exception {
+
+        final InputStream is = getResource("test-optional-paths.xml");
+        final PatchConfig patchConfig = PatchConfigXml.parse(is);
+        // Patch
+        assertNotNull(patchConfig);
+        assertEquals("patch-12345", patchConfig.getPatchId());
+        assertEquals("patch description", patchConfig.getDescription());
+        assertNotNull(patchConfig.getPatchType());
+        assertEquals(Patch.PatchType.CUMULATIVE, patchConfig.getPatchType());
+        assertTrue(patchConfig.isGenerateByDiff());
+        assertEquals("2.3.4", patchConfig.getResultingVersion());
+
+        validateAppliesTo(patchConfig, "1.2.3");
+
+        final Collection<OptionalPath> optionalPaths = patchConfig.getOptionalPaths();
+        assertEquals(3, optionalPaths.size());
+        optionalPaths.contains(OptionalPath.create("docs"));
+        optionalPaths.contains(OptionalPath.create("dir/appclient"));
+        optionalPaths.contains(OptionalPath.create("bin/appclient.txt", "dir/appclient"));
     }
 
     private static InputStream getResource(String name) throws IOException {

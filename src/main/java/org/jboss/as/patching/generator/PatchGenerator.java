@@ -26,6 +26,7 @@ import static java.lang.System.getProperty;
 import static java.lang.System.getSecurityManager;
 
 import javax.xml.stream.XMLStreamException;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,9 +37,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.jboss.as.patching.IoUtils;
-import org.jboss.as.patching.PatchMessages;
+import org.jboss.as.patching.PatchingException;
 import org.jboss.as.patching.ZipUtils;
+import org.jboss.as.patching.logging.PatchLogger;
 import org.jboss.as.patching.metadata.Patch;
+import org.jboss.as.patching.metadata.PatchMerger;
 import org.jboss.as.version.ProductConfig;
 import org.jboss.modules.Module;
 
@@ -52,6 +55,16 @@ import org.jboss.modules.Module;
  * @author Brian Stansberry (c) 2012 Red Hat Inc.
  */
 public class PatchGenerator {
+
+    private static final String APPLIES_TO_DIST = "--applies-to-dist";
+    private static final String ASSEMBLE_PATCH_BUNDLE = "--assemble-patch-bundle";
+    private static final String CREATE_TEMPLATE = "--create-template";
+    private static final String DETAILED_INSPECTION = "--detailed-inspection";
+    private static final String INCLUDE_VERSION = "--include-version";
+    private static final String COMBINE_WITH = "--combine-with";
+    private static final String OUTPUT_FILE = "--output-file";
+    private static final String PATCH_CONFIG = "--patch-config";
+    private static final String UPDATED_DIST = "--updated-dist";
 
     public static void main(String[] args) {
         try {
@@ -69,37 +82,39 @@ public class PatchGenerator {
     private File oldRoot;
     private File newRoot;
     private File patchFile;
+    private File previousCp;
     private File tmp;
 
-    private PatchGenerator(File patchConfig, File oldRoot, File newRoot, File patchFile, boolean includeVersion) {
+    private PatchGenerator(File patchConfig, File oldRoot, File newRoot, File patchFile, boolean includeVersion, File previousCp) {
         this.patchConfigFile = patchConfig;
         this.oldRoot = oldRoot;
         this.newRoot = newRoot;
         this.patchFile = patchFile;
         this.includeVersion = includeVersion;
+        this.previousCp = previousCp;
     }
 
-    private void process() throws IOException, XMLStreamException {
+    private void process() throws PatchingException, IOException, XMLStreamException {
 
         try {
             PatchConfig patchConfig = parsePatchConfig();
 
             Set<String> required = new TreeSet<String>();
             if (newRoot == null) {
-                required.add("--updated-dist");
+                required.add(UPDATED_DIST);
             }
             if (oldRoot == null) {
-                required.add("--applies-to-dist");
+                required.add(APPLIES_TO_DIST);
             }
             if (patchFile == null) {
                 if (newRoot != null) {
                     patchFile = new File(newRoot, "patch-" + System.currentTimeMillis() + ".par");
                 } else {
-                    required.add("--output-file");
+                    required.add(OUTPUT_FILE);
                 }
             }
             if (!required.isEmpty()) {
-                System.err.printf(PatchMessages.MESSAGES.missingRequiredArgs(required));
+                System.err.printf(PatchLogger.ROOT_LOGGER.missingRequiredArgs(required));
                 usage();
                 return;
             }
@@ -130,6 +145,7 @@ public class PatchGenerator {
             final PatchBuilderWrapper builder = patchConfig.toPatchBuilder();
             builder.setPatchId(patchConfig.getPatchId());
             builder.setDescription(patchConfig.getDescription());
+            builder.setOptionalPaths(patchConfig.getOptionalPaths());
             if (patchConfig.getPatchType() == Patch.PatchType.CUMULATIVE) {
                 // CPs need to upgrade
                 if (base.getVersion().equals(updated.getVersion())) {
@@ -146,8 +162,11 @@ public class PatchGenerator {
             // Copy the contents to the temp dir structure
             PatchContentWriter.process(tmp, newRoot, patch);
 
-            // Create the patch
-            ZipUtils.zip(tmp, patchFile);
+            if(previousCp != null) {
+                PatchMerger.merge(previousCp, tmp, patchFile);
+            } else {
+                ZipUtils.zip(tmp, patchFile);
+            }
 
         } finally {
             IoUtils.recursiveDelete(tmp);
@@ -193,6 +212,7 @@ public class PatchGenerator {
         File newFile = null;
         File patchFile = null;
         boolean includeVersion = false;
+        File combineWith = null;
 
         final int argsLength = args.length;
         for (int i = 0; i < argsLength; i++) {
@@ -207,101 +227,112 @@ public class PatchGenerator {
                 } else if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
                     usage();
                     return null;
-                } else if (arg.startsWith("--applies-to-dist=")) {
-                    String val = arg.substring("--applies-to-dist=".length());
+                } else if (arg.startsWith(APPLIES_TO_DIST)) {
+                    String val = arg.substring(APPLIES_TO_DIST.length() + 1);
                     oldFile = new File(val);
                     if (!oldFile.exists()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileDoesNotExist(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileDoesNotExist(arg));
                         usage();
                         return null;
                     } else if (!oldFile.isDirectory()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileIsNotADirectory(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsNotADirectory(arg));
                         usage();
                         return null;
                     }
-                } else if (arg.startsWith("--updated-dist=")) {
-                    String val = arg.substring("--updated-dist=".length());
+                } else if (arg.startsWith(UPDATED_DIST)) {
+                    String val = arg.substring(UPDATED_DIST.length() + 1);
                     newFile = new File(val);
                     if (!newFile.exists()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileDoesNotExist(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileDoesNotExist(arg));
                         usage();
                         return null;
                     } else if (!newFile.isDirectory()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileIsNotADirectory(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsNotADirectory(arg));
                         usage();
                         return null;
                     }
-                } else if (arg.startsWith("--patch-config=")) {
-                    String val = arg.substring("--patch-config=".length());
+                } else if (arg.startsWith(PATCH_CONFIG)) {
+                    String val = arg.substring(PATCH_CONFIG.length() + 1);
                     patchConfig = new File(val);
                     if (!patchConfig.exists()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileDoesNotExist(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileDoesNotExist(arg));
                         usage();
                         return null;
                     } else if (patchConfig.isDirectory()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileIsADirectory(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsADirectory(arg));
                         usage();
                         return null;
                     }
-                } else if (arg.startsWith("--output-file=")) {
-                    String val = arg.substring("--output-file=".length());
+                } else if (arg.startsWith(OUTPUT_FILE)) {
+                    String val = arg.substring(OUTPUT_FILE.length() + 1);
                     patchFile = new File(val);
                     if (patchFile.exists() && patchFile.isDirectory()) {
-                        System.err.printf(PatchMessages.MESSAGES.fileIsADirectory(arg));
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsADirectory(arg));
                         usage();
                         return null;
                     }
-                } else if (arg.equals("--detailed-inspection")) {
+                } else if (arg.equals(DETAILED_INSPECTION)) {
                     ModuleDiffUtils.deepInspection = true;
-                } else if (arg.equals("--include-version")) {
+                } else if (arg.equals(INCLUDE_VERSION)) {
                     includeVersion = true;
-                } else if (arg.equals("--create-template")) {
+                } else if (arg.equals(CREATE_TEMPLATE)) {
                     TemplateGenerator.generate(args);
                     return null;
-                } else if (arg.equals("--assemble-patch-bundle")) {
+                } else if (arg.equals(ASSEMBLE_PATCH_BUNDLE)) {
                     PatchBundleGenerator.assemble(args);
                     return null;
+                } else if (arg.startsWith(COMBINE_WITH)) {
+                    String val = arg.substring(COMBINE_WITH.length() + 1);
+                    combineWith = new File(val);
+                    if (!combineWith.exists()) {
+                        System.err.printf(PatchLogger.ROOT_LOGGER.fileDoesNotExist(arg));
+                        usage();
+                        return null;
+                    }
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.printf(PatchMessages.MESSAGES.argumentExpected(arg));
+                System.err.printf(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                 usage();
                 return null;
             }
         }
 
         if (patchConfig == null) {
-            System.err.printf(PatchMessages.MESSAGES.missingRequiredArgs(Collections.singleton("--patch-config")));
+            System.err.printf(PatchLogger.ROOT_LOGGER.missingRequiredArgs(Collections.singleton(PATCH_CONFIG)));
             usage();
             return null;
         }
 
-        return new PatchGenerator(patchConfig, oldFile, newFile, patchFile, includeVersion);
+        return new PatchGenerator(patchConfig, oldFile, newFile, patchFile, includeVersion, combineWith);
     }
 
     private static void usage() {
 
         Usage usage = new Usage();
 
-        usage.addArguments("--applies-to-dist=<file>");
-        usage.addInstruction(PatchMessages.MESSAGES.argAppliesToDist());
+        usage.addArguments(APPLIES_TO_DIST + "=<file>");
+        usage.addInstruction("Filesystem path of a pristine unzip of the distribution of the version of the software to which the generated patch applies");
 
         usage.addArguments("-h", "--help");
-        usage.addInstruction(PatchMessages.MESSAGES.argHelp());
+        usage.addInstruction("Display this message and exit");
 
-        usage.addArguments("--output-file=<file>");
-        usage.addInstruction(PatchMessages.MESSAGES.argOutputFile());
+        usage.addArguments(OUTPUT_FILE + "=<file>");
+        usage.addInstruction("Filesystem location to which the generated patch file should be written");
 
-        usage.addArguments("--patch-config=<file>");
-        usage.addInstruction(PatchMessages.MESSAGES.argPatchConfig());
+        usage.addArguments(PATCH_CONFIG + "=<file>");
+        usage.addInstruction("Filesystem path of the patch generation configuration file to use");
 
-        usage.addArguments("--updated-dist=<file>");
-        usage.addInstruction(PatchMessages.MESSAGES.argUpdatedDist());
+        usage.addArguments(UPDATED_DIST + "=<file>");
+        usage.addInstruction("Filesystem path of a pristine unzip of a distribution of software which contains the changes that should be incorporated in the patch");
 
         usage.addArguments("-v", "--version");
-        usage.addInstruction(PatchMessages.MESSAGES.argVersion());
+        usage.addInstruction("Print version and exit");
 
-        usage.addArguments("--detailed-inspection");
+        usage.addArguments(DETAILED_INSPECTION);
         usage.addInstruction("Enable detailed inspection for all modules.");
+
+        usage.addArguments(COMBINE_WITH + "=<file>");
+        usage.addInstruction("Filesystem path of the previous CP to be included into the same package with the newly generated one");
 
         String headline = usage.getDefaultUsageHeadline("patch-gen");
         System.out.print(usage.usage(headline));
