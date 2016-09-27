@@ -33,7 +33,7 @@
             For example: <version.org.jboss.as.console>
          -->
 
-        <version.org.wildfly-core>2.0.0.CR6</version.org.wildfly-core>
+        <version.org.wildfly-core>2.2.0.Final</version.org.wildfly-core>
         <version.junit>4.11</version.junit>
 
         <!-- Surefire args -->
