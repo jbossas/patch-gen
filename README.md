@@ -41,7 +41,7 @@ You probably want to use the shaded jar, which is executable and contains all of
 The jars will be located in the `target/` subdirectory.
 
 #### Download from Github
-    curl -LO 'https://github.com/jbossas/patch-gen/releases/download/1.0/patch-gen-1.0-shaded.jar'
+    curl -LO 'https://github.com/jbossas/patch-gen/releases/download/2.0.0.Final/patch-gen-2.0.0.Final-shaded.jar'
 
 ## Patch Workflow
 
