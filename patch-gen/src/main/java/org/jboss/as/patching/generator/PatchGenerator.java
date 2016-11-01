@@ -25,8 +25,6 @@ package org.jboss.as.patching.generator;
 import static java.lang.System.getProperty;
 import static java.lang.System.getSecurityManager;
 
-import javax.xml.stream.XMLStreamException;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +33,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.patching.IoUtils;
 import org.jboss.as.patching.PatchingException;
@@ -56,15 +56,15 @@ import org.jboss.modules.Module;
  */
 public class PatchGenerator {
 
-    private static final String APPLIES_TO_DIST = "--applies-to-dist";
-    private static final String ASSEMBLE_PATCH_BUNDLE = "--assemble-patch-bundle";
-    private static final String CREATE_TEMPLATE = "--create-template";
-    private static final String DETAILED_INSPECTION = "--detailed-inspection";
-    private static final String INCLUDE_VERSION = "--include-version";
-    private static final String COMBINE_WITH = "--combine-with";
-    private static final String OUTPUT_FILE = "--output-file";
-    private static final String PATCH_CONFIG = "--patch-config";
-    private static final String UPDATED_DIST = "--updated-dist";
+    public static final String APPLIES_TO_DIST = "--applies-to-dist";
+    public static final String ASSEMBLE_PATCH_BUNDLE = "--assemble-patch-bundle";
+    public static final String CREATE_TEMPLATE = "--create-template";
+    public static final String DETAILED_INSPECTION = "--detailed-inspection";
+    public static final String INCLUDE_VERSION = "--include-version";
+    public static final String COMBINE_WITH = "--combine-with";
+    public static final String OUTPUT_FILE = "--output-file";
+    public static final String PATCH_CONFIG = "--patch-config";
+    public static final String UPDATED_DIST = "--updated-dist";
 
     public static void main(String[] args) {
         try {
@@ -79,10 +79,10 @@ public class PatchGenerator {
 
     private final boolean includeVersion;
     private final File patchConfigFile;
-    private File oldRoot;
-    private File newRoot;
+    private final File oldRoot;
+    private final File newRoot;
     private File patchFile;
-    private File previousCp;
+    private final File previousCp;
     private File tmp;
 
     private PatchGenerator(File patchConfig, File oldRoot, File newRoot, File patchFile, boolean includeVersion, File previousCp) {
@@ -99,7 +99,7 @@ public class PatchGenerator {
         try {
             PatchConfig patchConfig = parsePatchConfig();
 
-            Set<String> required = new TreeSet<String>();
+            Set<String> required = new TreeSet<>();
             if (newRoot == null) {
                 required.add(UPDATED_DIST);
             }
