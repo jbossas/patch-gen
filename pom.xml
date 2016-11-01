@@ -11,13 +11,16 @@
     </parent>
 
     <groupId>org.jboss.as</groupId>
-    <artifactId>patch-gen</artifactId>
+    <artifactId>patch-gen-parent</artifactId>
     <version>2.0.1.Alpha1-SNAPSHOT</version>
 
-    <name>jboss patch-gen tool</name>
+    <name>JBoss patch-gen Build Aggregator</name>
     <description>The patch-gen tool</description>
+    <packaging>pom</packaging>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
         <!-- Build configuration -->
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
@@ -47,108 +50,52 @@
     </properties>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
             <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-            <plugin>
-                <!--suppress MavenModelInspection -->
-                <groupId>org.eclipse.m2e</groupId>
-                <!--suppress MavenModelInspection -->
-                <artifactId>lifecycle-mapping</artifactId>
-                <!--suppress MavenModelInspection -->
-                <version>1.0.0</version>
-                <configuration>
-                    <lifecycleMappingMetadata>
-                        <pluginExecutions>
-                            <pluginExecution>
-                                <pluginExecutionFilter>
-                                    <groupId>
-                                        org.apache.maven.plugins
-                                    </groupId>
-                                    <artifactId>
-                                        maven-checkstyle-plugin
-                                    </artifactId>
-                                    <versionRange>
-                                        [2.5,)
-                                    </versionRange>
-                                    <goals>
-                                        <goal>checkstyle</goal>
-                                    </goals>
-                                </pluginExecutionFilter>
-                                <action>
-                                    <ignore></ignore>
-                                </action>
-                            </pluginExecution>
-                        </pluginExecutions>
-                    </lifecycleMappingMetadata>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>org.jboss.as.patching.generator.PatchGenerator</mainClass>
-                        </transformer>
-                    </transformers>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>shaded</shadedClassifierName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/assembly.xml</descriptor>
-                    </descriptors>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+                <plugin>
+                    <!--suppress MavenModelInspection -->
+                    <groupId>org.eclipse.m2e</groupId>
+                    <!--suppress MavenModelInspection -->
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.apache.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-checkstyle-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [2.5,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>checkstyle</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
-    <dependencies>
-
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-patching</artifactId>
-            <version>${version.org.wildfly-core}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${version.junit}</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+    <modules>
+        <module>patch-gen</module>
+    </modules>
 
     <repositories>
         <repository>
@@ -194,5 +141,4 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
 </project>
