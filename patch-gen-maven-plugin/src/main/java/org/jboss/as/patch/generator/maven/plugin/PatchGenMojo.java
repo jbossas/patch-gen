@@ -68,7 +68,7 @@ import org.jboss.as.patching.generator.PatchGenerator;
  *
  * @author Gunnar Morling
  */
-@Mojo( name = "GenPatch", defaultPhase = LifecyclePhase.GENERATE_RESOURCES )
+@Mojo( name = "generate-patch", defaultPhase = LifecyclePhase.GENERATE_RESOURCES )
 public class PatchGenMojo extends AbstractMojo {
 
     @Parameter( property = "patchConfig", required = true )
