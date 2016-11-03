@@ -8,10 +8,19 @@ In the following sections, substitute `patch-gen` for `java -jar patch-gen-*-sha
 
     alias patch-gen='java -jar patch-gen-*-shaded.jar'
 
-### Patch Generation
-    patch-gen --applies-to-dist=~/wildfly/wildfly-8.0.0.Final --updated-dist=~/wildfly/wildfly-8.1.0.CR2 --patch-config=patch-config-wildfly-CR2-patch.xml --output-file=wildfly-8.1.0.CR2.patch.zip
+## Patch Generation
+    patch-gen --applies-to-dist=~/wildfly/wildfly-8.0.0.Final --updated-dist=~/wildfly/wildfly-8.0.1.Final --patch-config=wildfly-8.0.1.Final-patch.xml --output-file=wildfly-8.0.1.Final.patch.zip
 
 `--applies-to-dist` and `--updated-dist` must point exactly at the root of the distributions (the directory containing bin, modules, domain, etc.), otherwise the tool will crash.
+
+### Generation of patches containing multiple CPs
+
+    patch-gen --applies-to-dist=~/wildfly/wildfly-8.0.1.Final --updated-dist=~/wildfly/wildfly-8.0.2.Final --patch-config=wildfly-8.0.2.Final-patch.xml --output-file=wildfly-8.0.2.Final.patch.zip --combine-with=wildfly-8.0.1.Final.patch.zip
+
+where wildfly-8.0.1.Final.patch.zip is the last produced CP (in this example generated in the section above) for wildfly-8.0.0.Final.
+The generated patch wildfly-8.0.2.Final.patch.zip can be applied to wildfly-8.0.1.Final as well as to wildfly-8.0.0.Final.
+No matter to which version it is applied, the resulting patched version will be wildfly-8.0.2.Final.
+There is no restriction on the number of CPs included into a single patch file.
 
 ### Configuration Templating
 
@@ -32,7 +41,7 @@ You probably want to use the shaded jar, which is executable and contains all of
 The jars will be located in the `target/` subdirectory.
 
 #### Download from Github
-    curl -LO 'https://github.com/jbossas/patch-gen/releases/download/1.0/patch-gen-1.0-shaded.jar'
+    curl -LO 'https://github.com/jbossas/patch-gen/releases/download/2.0.0.Final/patch-gen-2.0.0.Final-shaded.jar'
 
 ## Patch Workflow
 
@@ -44,10 +53,10 @@ $EDITOR patch-config-wildfly-CR2-patch.xml
 ```xml
 <?xml version='1.0' encoding='UTF-8'?>
 <patch-config xmlns="urn:jboss:patch-config:1.0">
-   <name>wildfly-CR2</name>
-   <description>WildFly 8.1.0.CR2 patch</description>
+   <name>wildfly-8.0.2.Final.patch</name>
+   <description>WildFly 8.0.2.Final patch</description>
    <cumulative  />
-   <element patch-id="base-wildfly-CR2-patch">
+   <element patch-id="base-wildfly-8.0.2.Final-patch">
       <cumulative name="base" />
       <description>No description available</description>
    </element>
