@@ -22,9 +22,11 @@
 package org.jboss.as.patch.generator.maven.plugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -71,6 +73,8 @@ import org.jboss.as.patching.generator.PatchGenerator;
 @Mojo( name = "generate-patch", defaultPhase = LifecyclePhase.GENERATE_RESOURCES )
 public class PatchGenMojo extends AbstractMojo {
 
+    private static final String LOG_FILE = "patchgen.log";
+
     @Parameter( property = "patchConfig", required = true )
     private File patchConfig;
 
@@ -98,9 +102,21 @@ public class PatchGenMojo extends AbstractMojo {
     @Parameter( property = "combineWith" )
     private File combineWith;
 
+    @Parameter( property = "project.build.directory" )
+    private File buildDirectory;
+
+    @Parameter( property = "plugin.artifacts" )
+    protected List<Artifact> pluginArtifacts;
+
     @Override
     public void execute() throws MojoExecutionException {
         List<String> args = new ArrayList<>();
+
+        args.add( "java" );
+        args.add( "-cp" );
+        args.add( getClasspath() );
+        args.add( PatchGenerator.class.getName() );
+
         args.add( PatchGenerator.APPLIES_TO_DIST + "=" + appliesToDist.getPath() );
         args.add( PatchGenerator.OUTPUT_FILE + "=" + outputFile.getPath() );
         args.add( PatchGenerator.PATCH_CONFIG + "=" + patchConfig.getPath() );
@@ -126,6 +142,43 @@ public class PatchGenMojo extends AbstractMojo {
             args.add( PatchGenerator.COMBINE_WITH + "=" + combineWith.getPath() );
         }
 
-        PatchGenerator.main( args.toArray( new String[0] ) );
+        // Ideally, we'd just invoke PatchGenerator directly; currently we cannot do so due to https://issues.jboss.org/browse/MODULES-136:
+        // JBoss Modules, when used as a library, will set some system properties to values causing trouble for other plug-ins later in the
+        // build; e.g. SAXParserFactory is redirected to a JBoss Modules specific variant which then cannot be found by other users such as
+        // the Checkstyle plug-in (which naturally doesn't have JBoss Modules on the plug-in dependency path). Hence we start patch-gen in
+        // a separate process
+        //
+        // PatchGenerator.main( args.toArray( new String[0] ) );
+        try {
+            Process p = new ProcessBuilder( args )
+                    .redirectOutput( new File( buildDirectory, LOG_FILE ) )
+                    .redirectError( new File( buildDirectory, LOG_FILE ) )
+                    .start();
+            p.waitFor();
+        }
+        catch (IOException | InterruptedException e) {
+            throw new MojoExecutionException( "Execution of PatchGenerator failed. See " + LOG_FILE + " for details.", e );
+        }
+
+        if ( !outputFile.exists() ) {
+            throw new MojoExecutionException( "Execution of PatchGenerator failed. See " + LOG_FILE + " for details." );
+        }
+    }
+
+    private String getClasspath() {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+
+        for ( Artifact artifact : pluginArtifacts ) {
+            if ( first ) {
+                first = false;
+            }
+            else {
+                sb.append( File.pathSeparator );
+            }
+            sb.append( artifact.getFile().getPath() );
+        }
+
+        return sb.toString();
     }
 }
