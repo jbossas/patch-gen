@@ -7,16 +7,21 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>10</version>
+        <version>20</version>
     </parent>
 
     <groupId>org.jboss.as</groupId>
     <artifactId>patch-gen-parent</artifactId>
     <version>2.0.1.Alpha2-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <name>JBoss patch-gen Build Aggregator</name>
     <description>The patch-gen tool</description>
-    <packaging>pom</packaging>
+
+    <modules>
+        <module>patch-gen</module>
+        <module>patch-gen-maven-plugin</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -55,6 +60,23 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>patch-gen</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>patch-gen-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-patching</artifactId>
+                <version>${version.org.wildfly-core}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <scope>test</scope>
+                <version>${version.junit}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -107,11 +129,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <modules>
-        <module>patch-gen</module>
-        <module>patch-gen-maven-plugin</module>
-  </modules>
 
     <repositories>
         <repository>

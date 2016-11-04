@@ -8,16 +8,25 @@
         <groupId>org.jboss.as</groupId>
         <artifactId>patch-gen-parent</artifactId>
         <version>2.0.1.Alpha2-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>patch-gen</artifactId>
+    <packaging>jar</packaging>
 
     <name>JBoss patch-gen tool</name>
     <description>The patch-gen Tool</description>
 
-    <properties>
-    </properties>
+    <dependencies>
+        <dependency>
+        	<groupId>org.wildfly.core</groupId>
+        	<artifactId>wildfly-patching</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -70,18 +79,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.wildfly.core</groupId>
-            <artifactId>wildfly-patching</artifactId>
-            <version>${version.org.wildfly-core}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${version.junit}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>
