@@ -77,6 +77,9 @@ class DistributionProcessor {
             }
         }
 
+        if (processor.moduleRoots.isEmpty()) {
+            throw new IOException(distributionRoot.getAbsolutePath() + " is not a valid server distribution directory.");
+        }
         final List<File> mp = new ArrayList<File>();
         final Set<DistributionContentItem> moduleRoots = processor.moduleRoots;
         for (final DistributionContentItem item : moduleRoots) {
