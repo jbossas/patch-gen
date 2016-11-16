@@ -41,7 +41,6 @@ import org.jboss.as.patching.PatchingException;
 import org.jboss.as.patching.ZipUtils;
 import org.jboss.as.patching.logging.PatchLogger;
 import org.jboss.as.patching.metadata.Patch;
-import org.jboss.as.patching.metadata.PatchMerger;
 import org.jboss.as.version.ProductConfig;
 import org.jboss.modules.Module;
 
