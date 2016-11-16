@@ -47,7 +47,7 @@ import org.jboss.as.patching.generator.PatchGenerator;
  * <plugin>
  *     <groupId>org.jboss.as</groupId>
  *     <artifactId>patch-gen-maven-plugin</artifactId>
- *     <version>2.0.1.Alpha2</version>
+ *     <version>2.0.1.Alpha3-SNAPSHOT</version>
  *     <executions>
  *         <execution>
  *             <id>create-patch-file</id>
