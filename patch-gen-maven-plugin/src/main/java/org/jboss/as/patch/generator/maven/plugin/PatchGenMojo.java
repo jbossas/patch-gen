@@ -32,6 +32,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.shared.utils.cli.CommandLineException;
+import org.apache.maven.shared.utils.cli.CommandLineUtils;
 import org.jboss.as.patching.generator.PatchGenerator;
 
 /**
@@ -102,6 +104,9 @@ public class PatchGenMojo extends AbstractMojo {
     @Parameter( property = "combineWith" )
     private File combineWith;
 
+    @Parameter( property = "argLine" )
+    private String argLine;
+
     @Parameter( property = "project.build.directory" )
     private File buildDirectory;
 
@@ -113,6 +118,11 @@ public class PatchGenMojo extends AbstractMojo {
         List<String> args = new ArrayList<>();
 
         args.add( "java" );
+
+        for ( String additionalArg : getAdditionalArgs() ) {
+            args.add( additionalArg );
+        }
+
         args.add( "-cp" );
         args.add( getClasspath() );
         args.add( PatchGenerator.class.getName() );
@@ -180,5 +190,18 @@ public class PatchGenMojo extends AbstractMojo {
         }
 
         return sb.toString();
+    }
+
+    private String[] getAdditionalArgs() throws MojoExecutionException {
+        if ( argLine == null || argLine.trim().length() == 0 ) {
+            return new String[0];
+        }
+
+        try {
+            return CommandLineUtils.translateCommandline( argLine.replace( "\n", " " ).replaceAll( "\r", " " ) );
+        }
+        catch (CommandLineException e) {
+            throw new MojoExecutionException( "Unable to parse argLine: " + argLine, e );
+        }
     }
 }
