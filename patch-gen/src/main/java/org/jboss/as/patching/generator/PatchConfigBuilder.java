@@ -225,9 +225,6 @@ class PatchConfigBuilder implements ContentItemFilter {
             final PatchBuilderWrapper wrapper = new PatchBuilderWrapper() {
                 @Override
                 PatchElementBuilder modifyLayer(String name, boolean addOn) {
-                    if (addOn) {
-                        throw processingError("does not support add-ons %s", name);
-                    }
                     final PatchElementConfigBuilder config = PatchConfigBuilder.this.elements.get(name);
                     if (config == null) {
                         return null;
@@ -238,9 +235,9 @@ class PatchConfigBuilder implements ContentItemFilter {
                         config.setPatchType(patchType);
                     }
                     if (patchType == Patch.PatchType.CUMULATIVE) {
-                        builder = upgradeElement(config.getPatchId(), name, false);
+                        builder = upgradeElement(config.getPatchId(), name, addOn);
                     } else {
-                        builder = oneOffPatchElement(config.getPatchId(), name, false);
+                        builder = oneOffPatchElement(config.getPatchId(), name, addOn);
                     }
                     if (config.getDescription() != null) {
                         builder.setDescription(config.getDescription());
