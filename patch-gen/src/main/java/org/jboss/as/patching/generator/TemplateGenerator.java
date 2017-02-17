@@ -22,13 +22,15 @@
 
 package org.jboss.as.patching.generator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.UUID;
 
-import org.jboss.as.patching.IoUtils;
 import org.jboss.as.patching.logging.PatchLogger;
 
 /**
@@ -39,9 +41,8 @@ import org.jboss.as.patching.logging.PatchLogger;
 class TemplateGenerator {
 
     private static final String TAB = "   ";
-    private static final String LF = "\r\n";
 
-    static String generate(final String... args) throws IOException {
+    static void generate(final String... args) throws IOException {
 
         boolean stdout = false;
         Boolean oneOff = null;
@@ -54,14 +55,14 @@ class TemplateGenerator {
             try {
                 if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
                     usage();
-                    return null;
+                    return;
                 } else if(arg.equals("--one-off")) {
                     if (oneOff == null) {
                         oneOff = Boolean.TRUE;
                         patchID = args[++i];
                     } else {
                         usage();
-                        return null;
+                        return;
                     }
                 } else if(arg.equals("--cumulative")) {
                     if (oneOff == null) {
@@ -69,7 +70,7 @@ class TemplateGenerator {
                         patchID = args[++i];
                     } else {
                         usage();
-                        return null;
+                        return;
                     }
                 } else if(arg.equals("--applies-to-version")) {
                     appliesToVersion = args[++i];
@@ -80,93 +81,129 @@ class TemplateGenerator {
                 } else {
                     System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                     usage();
-                    return null;
+                    return;
                 }
             } catch (IndexOutOfBoundsException e) {
                 System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                 usage();
-                return null;
+                return;
             }
         }
 
         if (oneOff == null) {
             usage();
-            return null;
+            return;
         }
 
-        final StringBuilder builder = new StringBuilder();
-        builder.append("<?xml version='1.0' encoding='UTF-8'?>").append(LF);
-        builder.append("<patch-config xmlns=\"urn:jboss:patch-config:1.0\">").append(LF);
-        builder.append(TAB).append("<name>").append(patchID).append("</name>").append(LF);
-        builder.append(TAB).append("<description>No description available</description>").append(LF);
-        builder.append(TAB);
-        if (oneOff) {
-            builder.append("<one-off ");
-        } else {
-            builder.append("<cumulative ");
-        }
-        if (appliesToVersion != null) {
-            builder.append("applies-to-version=\"").append(appliesToVersion).append("\"");
-        }
-        builder.append(" />").append(LF);
-
-        // Write patch element
-        builder.append(TAB).append("<element patch-id=\"").append("layer-base-").append(patchID).append("\">").append(LF);
-        builder.append(TAB).append(TAB);
-        if (oneOff) {
-            builder.append("<one-off ");
-        } else {
-            builder.append("<cumulative ");
-        }
-        builder.append("name=\"base\" />").append(LF);
-        builder.append(TAB).append(TAB).append("<description>No description available</description>").append(LF);
-
-        if (oneOff) {
-            builder.append(TAB).append(TAB).append("<specified-content>").append(LF);
-            builder.append(TAB).append(TAB).append(TAB).append("<modules>").append(LF);
-            builder.append(TAB).append(TAB).append(TAB).append(TAB).append("<updated name=\"org.jboss.as.server\" />").append(LF);
-            builder.append(TAB).append(TAB).append(TAB).append("</modules>").append(LF);
-            builder.append(TAB).append(TAB).append("</specified-content>").append(LF);
-        }
-        builder.append(TAB).append("</element>").append(LF);
-
-        if (oneOff) {
-            builder.append(TAB).append("<specified-content>").append(LF);
-            builder.append(TAB).append(TAB).append("<misc-files>").append(LF);
-            builder.append(TAB).append(TAB).append(TAB).append("<updated path=\"version.txt\" />").append(LF);
-            builder.append(TAB).append(TAB).append("</misc-files>").append(LF);
-            builder.append(TAB).append("</specified-content>").append(LF);
-        } else {
-            builder.append(TAB).append("<generate-by-diff />").append(LF);
-        }
-
-        builder.append("</patch-config>").append(LF);
-
-        final String output = builder.toString();
+        final Writer target;
         if (stdout) {
-            System.out.println(output);
+            target = new OutputStreamWriter(System.out);        	
         } else {
-            final File file = new File("patch-config-" +patchID + ".xml");
-            final Writer writer = new FileWriter(file);
-            try {
-                writer.write(output);
-                writer.close();
-            } finally {
-                IoUtils.safeClose(writer);
-            }
+        	target = new FileWriter(new File("patch-config-" +patchID + ".xml"));
         }
-        return output;
+        
+        try(BufferedWriter bw = new BufferedWriter(target)) {
+            bw.write("<?xml version='1.0' encoding='UTF-8'?>");bw.newLine();
+            elementStart(bw, 0, "patch-config", "xmlns", "urn:jboss:patch-config:1.0");
+            element(bw, 1, "name", patchID);
+            element(bw, 1, "description", "No description available");
+            element(bw, 1, oneOff ? "one-off" : "cumulative", "applies-to-version", appliesToVersion);
+            
+            // Write patch element
+            elementStart(bw, 1, "element", "patch-id", "layer-base-" + patchID);
+            element(bw, 2, oneOff ? "one-off" : "cumulative", "name", "base");
+            element(bw, 2, "description", "No description available");
+
+            if (oneOff) {
+				elementStart(bw, 2, "specified-content");
+				elementStart(bw, 3, "modules");
+				element(bw, 4, "updated", "name", "org.jboss.as.server");
+				elementEnd(bw, 3, "modules");
+				elementEnd(bw, 2, "specified-content");
+			}
+			elementEnd(bw, 1, "element");
+
+			if (oneOff) {
+				elementStart(bw, 1, "specified-content");
+				elementStart(bw, 2, "misc-files");
+				element(bw, 3, "updated", "path", "version.txt");
+				elementEnd(bw, 2, "misc-files");
+				elementEnd(bw, 1, "specified-content");
+			} else {
+				element(bw, 1, "generate-by-diff");
+			}
+
+            elementEnd(bw, 0, "patch-config");
+        }
     }
 
+
+    private static void elementStart(BufferedWriter writer, int offset, String name) throws IOException {
+    	elementStart(writer, offset, name, null, null);
+    }
+
+    private static void elementStart(BufferedWriter writer, int offset, String name, String attrName, String attrValue) throws IOException {
+    	writeStart(writer, offset, name, attrName, attrValue, false);
+    	writer.newLine();
+    }
+
+    private static void element(BufferedWriter writer, int offset, String name) throws IOException {
+    	element(writer, offset, name, null);
+    }
+
+    private static void element(BufferedWriter writer, int offset, String name, String content) throws IOException {
+    	element(writer, offset, name, null, null, content);
+    }
+
+    private static void element(BufferedWriter writer, int offset, String name, String attrName, String attrValue) throws IOException {
+    	element(writer, offset, name, attrName, attrValue, null);
+    }
+
+    private static void element(BufferedWriter writer, int offset, String name, String attrName, String attrValue, String content) throws IOException {
+    	writeStart(writer, offset, name, attrName, attrValue, content == null);
+    	if(content != null) {
+    		writer.write(content);
+    		elementEnd(writer, 0, name);
+    	}
+    }
+
+	private static void elementEnd(BufferedWriter writer, int offset, String name) throws IOException {
+		for(int i = 0; i < offset; ++i) {
+    	    writer.write(TAB);
+    	}
+		writer.write("</");
+		writer.write(name);
+		writer.write('>');
+    	writer.newLine();
+	}
+
+	private static void writeStart(BufferedWriter writer, int offset, String name, String attrName, String attrValue, boolean empty) throws IOException {
+		for(int i = 0; i < offset; ++i) {
+    	    writer.write(TAB);
+    	}
+    	writer.write('<');
+    	writer.write(name);
+    	if(attrValue != null) {
+    		writer.write(' ');
+    		writer.write(attrName);
+    		writer.write("=\"");
+    		writer.write(attrValue);
+    		writer.write('\"');
+    	}
+    	if(empty) {
+    		writer.write("/>");
+    		writer.newLine();
+    	} else {
+    		writer.write('>');
+    	}
+	}
+    
     static void usage() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("USAGE:").append(LF);
-        builder.append("patch-gen.sh --create-template --one-of     [patch-id]").append(LF);
-        builder.append("patch-gen.sh --create-template --cumulative [patch-id]").append(LF);
-        builder.append(LF);
-        builder.append("this will create a patch-config-[patch-id].xml").append(LF);
-        builder.append("if this is not desired just append --std.out").append(LF);
-        System.err.println(builder.toString());
+        System.err.println("USAGE:");
+        System.err.println("patch-gen.sh --create-template --one-off    [patch-id]");
+        System.err.println("patch-gen.sh --create-template --cumulative [patch-id]");
+        System.err.println();
+        System.err.println("this will create a patch-config-[patch-id].xml");
+        System.err.println("if this is not desired just append --std.out");
     }
-
 }
