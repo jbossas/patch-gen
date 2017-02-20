@@ -28,7 +28,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.UUID;
 
 import org.jboss.as.patching.logging.PatchLogger;
@@ -41,13 +40,14 @@ import org.jboss.as.patching.logging.PatchLogger;
 class TemplateGenerator {
 
     private static final String TAB = "   ";
-
+    
     static void generate(final String... args) throws IOException {
 
         boolean stdout = false;
         Boolean oneOff = null;
         String patchID = UUID.randomUUID().toString();
         String appliesToVersion = null;
+        boolean defaultOptionalPaths = false;
 
         final int argsLength = args.length;
         for (int i = 0; i < argsLength; i++) {
@@ -78,6 +78,8 @@ class TemplateGenerator {
                     stdout = true;
                 } else if (arg.equals("--create-template")) {
                     continue;
+                } else if (arg.equals("--default-optional-paths")) {
+                	defaultOptionalPaths = true;
                 } else {
                     System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
                     usage();
@@ -105,19 +107,19 @@ class TemplateGenerator {
         try(BufferedWriter bw = new BufferedWriter(target)) {
             bw.write("<?xml version='1.0' encoding='UTF-8'?>");bw.newLine();
             elementStart(bw, 0, "patch-config", "xmlns", "urn:jboss:patch-config:1.0");
-            element(bw, 1, "name", patchID);
-            element(bw, 1, "description", "No description available");
-            element(bw, 1, oneOff ? "one-off" : "cumulative", "applies-to-version", appliesToVersion);
+            elementWithContent(bw, 1, "name", patchID);
+            elementWithContent(bw, 1, "description", "No description available");
+            elementWithAttrs(bw, 1, oneOff ? "one-off" : "cumulative", "applies-to-version", appliesToVersion);
             
             // Write patch element
             elementStart(bw, 1, "element", "patch-id", "layer-base-" + patchID);
-            element(bw, 2, oneOff ? "one-off" : "cumulative", "name", "base");
-            element(bw, 2, "description", "No description available");
+            elementWithAttrs(bw, 2, oneOff ? "one-off" : "cumulative", "name", "base");
+            elementWithContent(bw, 2, "description", "No description available");
 
             if (oneOff) {
 				elementStart(bw, 2, "specified-content");
 				elementStart(bw, 3, "modules");
-				element(bw, 4, "updated", "name", "org.jboss.as.server");
+				elementWithAttrs(bw, 4, "updated", "name", "org.jboss.as.server");
 				elementEnd(bw, 3, "modules");
 				elementEnd(bw, 2, "specified-content");
 			}
@@ -126,41 +128,49 @@ class TemplateGenerator {
 			if (oneOff) {
 				elementStart(bw, 1, "specified-content");
 				elementStart(bw, 2, "misc-files");
-				element(bw, 3, "updated", "path", "version.txt");
+				elementWithAttrs(bw, 3, "updated", "path", "version.txt");
 				elementEnd(bw, 2, "misc-files");
 				elementEnd(bw, 1, "specified-content");
 			} else {
 				element(bw, 1, "generate-by-diff");
 			}
 
+			if(defaultOptionalPaths) {
+				elementStart(bw, 1, "optional-paths");
+				elementWithAttrs(bw, 2, "path", "value", "docs");
+				elementWithAttrs(bw, 2, "path", "value", "appclient");
+				elementWithAttrs(bw, 2, "path", "value", "bin/appclient.*", "requires", "appclient");
+				elementEnd(bw, 1, "optional-paths");
+			}
+			
             elementEnd(bw, 0, "patch-config");
         }
     }
 
 
     private static void elementStart(BufferedWriter writer, int offset, String name) throws IOException {
-    	elementStart(writer, offset, name, null, null);
+    	elementStart(writer, offset, name, (String[])null);
     }
 
-    private static void elementStart(BufferedWriter writer, int offset, String name, String attrName, String attrValue) throws IOException {
-    	writeStart(writer, offset, name, attrName, attrValue, false);
+    private static void elementStart(BufferedWriter writer, int offset, String name, String... attrs) throws IOException {
+    	writeStart(writer, offset, name, false, attrs);
     	writer.newLine();
     }
 
     private static void element(BufferedWriter writer, int offset, String name) throws IOException {
-    	element(writer, offset, name, null);
+    	elementWithContent(writer, offset, name, (String)null);
     }
 
-    private static void element(BufferedWriter writer, int offset, String name, String content) throws IOException {
-    	element(writer, offset, name, null, null, content);
+    private static void elementWithContent(BufferedWriter writer, int offset, String name, String content) throws IOException {
+    	element(writer, offset, name, content, (String[])null);
     }
 
-    private static void element(BufferedWriter writer, int offset, String name, String attrName, String attrValue) throws IOException {
-    	element(writer, offset, name, attrName, attrValue, null);
+    private static void elementWithAttrs(BufferedWriter writer, int offset, String name, String... attrs) throws IOException {
+    	element(writer, offset, name, null, attrs);
     }
 
-    private static void element(BufferedWriter writer, int offset, String name, String attrName, String attrValue, String content) throws IOException {
-    	writeStart(writer, offset, name, attrName, attrValue, content == null);
+    private static void element(BufferedWriter writer, int offset, String name, String content, String... attrs) throws IOException {
+    	writeStart(writer, offset, name, content == null, attrs);
     	if(content != null) {
     		writer.write(content);
     		elementEnd(writer, 0, name);
@@ -177,18 +187,26 @@ class TemplateGenerator {
     	writer.newLine();
 	}
 
-	private static void writeStart(BufferedWriter writer, int offset, String name, String attrName, String attrValue, boolean empty) throws IOException {
+	private static void writeStart(BufferedWriter writer, int offset, String name, boolean empty, String... attrs) throws IOException {
 		for(int i = 0; i < offset; ++i) {
     	    writer.write(TAB);
     	}
     	writer.write('<');
     	writer.write(name);
-    	if(attrValue != null) {
-    		writer.write(' ');
-    		writer.write(attrName);
-    		writer.write("=\"");
-    		writer.write(attrValue);
-    		writer.write('\"');
+    	
+    	if(attrs != null && attrs.length > 0) {
+    		int i = 0;
+    		while(i < attrs.length) {
+    			final String attrName = attrs[i++];
+    			final String attrValue = attrs[i++];
+    			if(attrValue != null) {
+					writer.write(' ');
+					writer.write(attrName);
+					writer.write("=\"");
+					writer.write(attrValue);
+					writer.write('\"');
+    			}
+    		}
     	}
     	if(empty) {
     		writer.write("/>");
