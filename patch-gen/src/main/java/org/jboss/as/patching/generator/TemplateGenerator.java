@@ -39,7 +39,15 @@ import org.jboss.as.patching.logging.PatchLogger;
  */
 class TemplateGenerator {
 
-    private static final String TAB = "   ";
+	private static final String APPLIES_TO_VERSION = "--applies-to-version";
+	private static final String CREATE_TEMPLATE = "--create-template";
+	private static final String CUMULATIVE = "--cumulative";
+	private static final String DEFAULT_OPTIONAL_PATHS = "--default-optional-paths";
+	private static final String H = "-h";
+	private static final String HELP = "--help";
+	private static final String ONE_OFF = "--one-off";
+    private static final String STD_OUT = "--std.out";
+	private static final String TAB = "    ";
     
     static void generate(final String... args) throws IOException {
 
@@ -53,10 +61,10 @@ class TemplateGenerator {
         for (int i = 0; i < argsLength; i++) {
             final String arg = args[i];
             try {
-                if ("--help".equals(arg) || "-h".equals(arg) || "-H".equals(arg)) {
+                if (HELP.equals(arg) || H.equalsIgnoreCase(arg)) {
                     usage();
                     return;
-                } else if(arg.equals("--one-off")) {
+                } else if(arg.equals(ONE_OFF)) {
                     if (oneOff == null) {
                         oneOff = Boolean.TRUE;
                         patchID = args[++i];
@@ -64,7 +72,7 @@ class TemplateGenerator {
                         usage();
                         return;
                     }
-                } else if(arg.equals("--cumulative")) {
+                } else if(arg.equals(CUMULATIVE)) {
                     if (oneOff == null) {
                         oneOff = Boolean.FALSE;
                         patchID = args[++i];
@@ -72,13 +80,13 @@ class TemplateGenerator {
                         usage();
                         return;
                     }
-                } else if(arg.equals("--applies-to-version")) {
+                } else if(arg.equals(APPLIES_TO_VERSION)) {
                     appliesToVersion = args[++i];
-                } else if(arg.equals("--std.out")) {
+                } else if(arg.equals(STD_OUT)) {
                     stdout = true;
-                } else if (arg.equals("--create-template")) {
+                } else if (arg.equals(CREATE_TEMPLATE)) {
                     continue;
-                } else if (arg.equals("--default-optional-paths")) {
+                } else if (arg.equals(DEFAULT_OPTIONAL_PATHS)) {
                 	defaultOptionalPaths = true;
                 } else {
                     System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
@@ -218,8 +226,8 @@ class TemplateGenerator {
     
     static void usage() {
         System.err.println("USAGE:");
-        System.err.println("patch-gen.sh --create-template --one-off    [patch-id]");
-        System.err.println("patch-gen.sh --create-template --cumulative [patch-id]");
+        System.err.println("patch-gen.sh --create-template --one-off    [patch-id] [" + DEFAULT_OPTIONAL_PATHS + "]");
+        System.err.println("patch-gen.sh --create-template --cumulative [patch-id] [" + APPLIES_TO_VERSION + "] [" + DEFAULT_OPTIONAL_PATHS + "]");
         System.err.println();
         System.err.println("this will create a patch-config-[patch-id].xml");
         System.err.println("if this is not desired just append --std.out");
