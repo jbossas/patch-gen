@@ -353,7 +353,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
 
     static List<String> matchOptionalPath(FSPathElement root, DistributionContentItem item) {
         if(item.getParent() == null || item.getParent().name == null) {
-            final FSPathElement dir = root.children.get(item.getName());
+            final FSPathElement dir = root.getMatchingElement(item.getName());
             if(dir != null) {
                 root.linkTo(dir);
                 return Collections.emptyList();
@@ -367,7 +367,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
         if(root.children.isEmpty()) {
             return path;
         }
-        final FSPathElement dir = root.children.get(item.getName());
+        final FSPathElement dir = root.getMatchingElement(item.getName());
         if(dir != null) {
             switch(path.size()) {
                 case 0:
@@ -386,6 +386,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
 
     private static final class FSPathElement {
         private String name;
+        private boolean containsWildcard;
         private Map<String, FSPathElement> children = Collections.emptyMap();
         private String[] requires;
 
@@ -395,17 +396,35 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
 
         FSPathElement(FSPathElement parent, String name) {
             assert name != null : "name is null";
-            this.name = name;
+            containsWildcard = name.charAt(name.length() - 1) == '*';
+            this.name = containsWildcard ? name.substring(0, name.length() - 1) : name;
             if(parent != null) {
                 parent.addChild(this);
             }
         }
 
         FSPathElement(FSPathElement linkTo) {
+        	containsWildcard = linkTo.containsWildcard;
             name = linkTo.name;
             children = linkTo.children;
         }
 
+        FSPathElement getMatchingElement(String targetName) {
+        	for(FSPathElement child : children.values()) {
+        		if(child.matches(targetName)) {
+        			return child;
+        		}
+        	}
+        	return null;
+        }
+        
+        boolean matches(String targetName) {
+        	if(containsWildcard) {
+        		return targetName.startsWith(name);
+        	}
+    		return name.equals(targetName);
+        }
+        
         FSPathElement addChild(String... names) {
             FSPathElement parent = this;
             FSPathElement child = null;
@@ -453,6 +472,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
         }
 
         void linkTo(FSPathElement dir) {
+        	this.containsWildcard = dir.containsWildcard;
             this.name = dir.name;
             this.children = dir.children;
             this.requires = dir.requires;

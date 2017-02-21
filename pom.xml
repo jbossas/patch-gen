@@ -41,7 +41,10 @@
             For example: <version.org.jboss.as.console>
          -->
 
-        <version.org.wildfly-core>3.0.0.Alpha11</version.org.wildfly-core>
+        <version.org.wildfly-core>3.0.0.Alpha19</version.org.wildfly-core>
+        <version.org.apache.maven.shared.maven-shared-utils>3.1.0</version.org.apache.maven.shared.maven-shared-utils>
+        <version.org.apache.maven.plugin-tools.maven-plugin-annotations>3.2</version.org.apache.maven.plugin-tools.maven-plugin-annotations>
+        <version.org.apache.maven.maven-plugin-api>2.0</version.org.apache.maven.maven-plugin-api>
         <version.junit>4.11</version.junit>
 
         <!-- Surefire args -->
@@ -66,11 +69,27 @@
                 <artifactId>patch-gen-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
             <dependency>
                 <groupId>org.wildfly.core</groupId>
                 <artifactId>wildfly-patching</artifactId>
                 <version>${version.org.wildfly-core}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.shared</groupId>
+                <artifactId>maven-shared-utils</artifactId>
+                <version>${version.org.apache.maven.shared.maven-shared-utils}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${version.org.apache.maven.plugin-tools.maven-plugin-annotations}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>${version.org.apache.maven.maven-plugin-api}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
