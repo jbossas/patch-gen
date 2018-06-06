@@ -43,7 +43,6 @@ import java.util.UUID;
 import org.jboss.as.patching.IoUtils;
 import org.jboss.as.patching.PatchingException;
 import org.jboss.as.patching.ZipUtils;
-import org.jboss.as.patching.logging.PatchLogger;
 import org.jboss.as.patching.metadata.BundledPatch;
 import org.jboss.as.patching.metadata.Patch;
 import org.jboss.as.patching.metadata.PatchBundleXml;
@@ -79,12 +78,12 @@ class PatchBundleGenerator {
                 } else if (arg.equals("--assemble-patch-bundle")) {
                     continue;
                 } else {
-                    System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
+                    System.err.println(PatchGenLogger.argumentExpected(arg));
                     usage();
                     return;
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
+                System.err.println(PatchGenLogger.argumentExpected(arg));
                 usage();
                 return;
             }
@@ -98,7 +97,7 @@ class PatchBundleGenerator {
             missing.add("--output");
         }
         if (! missing.isEmpty()) {
-            System.err.println(PatchLogger.ROOT_LOGGER.missingRequiredArgs(missing));
+            System.err.println(PatchGenLogger.missingRequiredArgs(missing));
             return;
         }
 

@@ -18,8 +18,8 @@
 
     <dependencies>
         <dependency>
-        	<groupId>org.wildfly.core</groupId>
-        	<artifactId>wildfly-patching</artifactId>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-patching</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
