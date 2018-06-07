@@ -30,8 +30,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.UUID;
 
-import org.jboss.as.patching.logging.PatchLogger;
-
 /**
  * Generate a simple template for a give patch type.
  *
@@ -48,7 +46,7 @@ class TemplateGenerator {
 	private static final String ONE_OFF = "--one-off";
     private static final String STD_OUT = "--std.out";
 	private static final String TAB = "    ";
-    
+
     static void generate(final String... args) throws IOException {
 
         boolean stdout = false;
@@ -89,12 +87,12 @@ class TemplateGenerator {
                 } else if (arg.equals(DEFAULT_OPTIONAL_PATHS)) {
                 	defaultOptionalPaths = true;
                 } else {
-                    System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
+                    System.err.println(PatchGenLogger.argumentExpected(arg));
                     usage();
                     return;
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.println(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
+                System.err.println(PatchGenLogger.argumentExpected(arg));
                 usage();
                 return;
             }
@@ -107,18 +105,18 @@ class TemplateGenerator {
 
         final Writer target;
         if (stdout) {
-            target = new OutputStreamWriter(System.out);        	
+            target = new OutputStreamWriter(System.out);
         } else {
         	target = new FileWriter(new File("patch-config-" +patchID + ".xml"));
         }
-        
+
         try(BufferedWriter bw = new BufferedWriter(target)) {
             bw.write("<?xml version='1.0' encoding='UTF-8'?>");bw.newLine();
             elementStart(bw, 0, "patch-config", "xmlns", "urn:jboss:patch-config:1.0");
             elementWithContent(bw, 1, "name", patchID);
             elementWithContent(bw, 1, "description", "No description available");
             elementWithAttrs(bw, 1, oneOff ? "one-off" : "cumulative", "applies-to-version", appliesToVersion);
-            
+
             // Write patch element
             elementStart(bw, 1, "element", "patch-id", "layer-base-" + patchID);
             elementWithAttrs(bw, 2, oneOff ? "one-off" : "cumulative", "name", "base");
@@ -150,7 +148,7 @@ class TemplateGenerator {
 				elementWithAttrs(bw, 2, "path", "value", "bin/appclient.*", "requires", "appclient");
 				elementEnd(bw, 1, "optional-paths");
 			}
-			
+
             elementEnd(bw, 0, "patch-config");
         }
     }
@@ -201,7 +199,7 @@ class TemplateGenerator {
     	}
     	writer.write('<');
     	writer.write(name);
-    	
+
     	if(attrs != null && attrs.length > 0) {
     		int i = 0;
     		while(i < attrs.length) {
@@ -223,7 +221,7 @@ class TemplateGenerator {
     		writer.write('>');
     	}
 	}
-    
+
     static void usage() {
         System.err.println("USAGE:");
         System.err.println("patch-gen.sh --create-template --one-off    [patch-id] [" + DEFAULT_OPTIONAL_PATHS + "]");

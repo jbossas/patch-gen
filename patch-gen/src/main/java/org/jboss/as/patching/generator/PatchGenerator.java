@@ -114,7 +114,7 @@ public class PatchGenerator {
                 }
             }
             if (!required.isEmpty()) {
-                System.err.printf(PatchLogger.ROOT_LOGGER.missingRequiredArgs(required));
+                System.err.printf(PatchGenLogger.missingRequiredArgs(required));
                 usage();
                 return;
             }
@@ -235,7 +235,7 @@ public class PatchGenerator {
                         usage();
                         return null;
                     } else if (!oldFile.isDirectory()) {
-                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsNotADirectory(arg));
+                        System.err.printf(PatchGenLogger.fileIsNotADirectory(arg));
                         usage();
                         return null;
                     }
@@ -247,7 +247,7 @@ public class PatchGenerator {
                         usage();
                         return null;
                     } else if (!newFile.isDirectory()) {
-                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsNotADirectory(arg));
+                        System.err.printf(PatchGenLogger.fileIsNotADirectory(arg));
                         usage();
                         return null;
                     }
@@ -259,7 +259,7 @@ public class PatchGenerator {
                         usage();
                         return null;
                     } else if (patchConfig.isDirectory()) {
-                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsADirectory(arg));
+                        System.err.printf(PatchGenLogger.fileIsADirectory(arg));
                         usage();
                         return null;
                     }
@@ -267,7 +267,7 @@ public class PatchGenerator {
                     String val = arg.substring(OUTPUT_FILE.length() + 1);
                     patchFile = new File(val);
                     if (patchFile.exists() && patchFile.isDirectory()) {
-                        System.err.printf(PatchLogger.ROOT_LOGGER.fileIsADirectory(arg));
+                        System.err.printf(PatchGenLogger.fileIsADirectory(arg));
                         usage();
                         return null;
                     }
@@ -291,14 +291,14 @@ public class PatchGenerator {
                     }
                 }
             } catch (IndexOutOfBoundsException e) {
-                System.err.printf(PatchLogger.ROOT_LOGGER.argumentExpected(arg));
+                System.err.printf(PatchGenLogger.argumentExpected(arg));
                 usage();
                 return null;
             }
         }
 
         if (patchConfig == null) {
-            System.err.printf(PatchLogger.ROOT_LOGGER.missingRequiredArgs(Collections.singleton(PATCH_CONFIG)));
+            System.err.printf(PatchGenLogger.missingRequiredArgs(Collections.singleton(PATCH_CONFIG)));
             usage();
             return null;
         }
