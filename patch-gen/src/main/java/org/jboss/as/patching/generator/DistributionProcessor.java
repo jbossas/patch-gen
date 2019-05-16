@@ -194,11 +194,12 @@ class DistributionProcessor {
             context.addLayer(newParent, layer, layerDir);
         }
         // Finally process the add-ons
+        final DistributionContentItem addOnsParent = DistributionStructureImpl.createMiscItem(parent, layersConfig.getAddOnsPath());
         final File addOnsDir = new File(root, layersConfig.getAddOnsPath());
         final File[] addOnsList = addOnsDir.listFiles();
         if (addOnsList != null) {
             for (final File addOn : addOnsList) {
-                context.addAddOn(newParent, addOn.getName(), addOn);
+                context.addAddOn(addOnsParent, addOn.getName(), addOn);
             }
         }
     }
