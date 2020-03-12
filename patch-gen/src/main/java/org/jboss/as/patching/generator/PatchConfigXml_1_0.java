@@ -110,6 +110,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         PATH("path"),
         REQUIRES("requires"),
         RESULTING_VERSION("resulting-version"),
+        SKIP_NON_CONFIGURED_LAYERS("skip-non-configured-layers"),
         SLOT("slot"),
         VALUE("value"),
 
@@ -368,6 +369,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         String name = null;
         String appliesTo = null;
         String resulting = null;
+        boolean skipNonConfiguredLayers = false;
 
         Set<Attribute> required = Collections.emptySet(); // EnumSet.of(Attribute.APPLIES_TO_VERSION, Attribute.RESULTING_VERSION);
 
@@ -386,6 +388,9 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
                 case RESULTING_VERSION:
                     resulting = value;
                     break;
+                case SKIP_NON_CONFIGURED_LAYERS:
+                    skipNonConfiguredLayers = Boolean.parseBoolean(value);
+                    break;
                 default:
                     throw unexpectedAttribute(reader, i);
             }
@@ -399,6 +404,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
 
         builder.setAppliesToName(name);
         builder.setCumulativeType(appliesTo, resulting);
+        builder.setSkipNonConfiguredLayers(skipNonConfiguredLayers);
 
         patchTypeConfigured = true;
     }

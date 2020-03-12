@@ -50,6 +50,7 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
 
 
     private FSPathElement optionalPaths = new FSPathElement("root");
+    private boolean skipNoConfigLayers = false;
 
     protected PatchBuilderWrapper() {
         //
@@ -64,6 +65,12 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
             }
         }
     }
+
+    public void setSkipNonConfiguredLayers(boolean skipNoConfigLayers) {
+        this.skipNoConfigLayers = skipNoConfigLayers;
+    }
+
+
 
     abstract PatchElementBuilder modifyLayer(final String name, final boolean addOn);
 
@@ -170,7 +177,9 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
                 updatedLayer = null;
             }
             //
-            compareLayer(layer, elementBuilder, originalLayer, updatedLayer, includeVersion);
+            if (!builder.skipNoConfigLayers || elementBuilder != null) {
+                compareLayer(layer, elementBuilder, originalLayer, updatedLayer, includeVersion);
+            }
         }
 
         for (final String layer : updatedLayers) {
@@ -178,7 +187,9 @@ abstract class PatchBuilderWrapper extends PatchBuilder {
             final Distribution.ProcessedLayer updatedLayer = updated.getLayer(layer);
             final PatchElementBuilder elementBuilder = builder.addLayer(layer);
             //
-            compareLayer(layer, elementBuilder, originalLayer, updatedLayer, includeVersion);
+            if (!builder.skipNoConfigLayers || elementBuilder != null) {
+                compareLayer(layer, elementBuilder, originalLayer, updatedLayer, includeVersion);
+            }
         }
 
         // Compare add-ons

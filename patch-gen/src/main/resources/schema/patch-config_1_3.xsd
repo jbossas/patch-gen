@@ -100,6 +100,13 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="skip-non-configured-layers" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    If true, it is possible to create patches which do not include the base (and other) layers.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="generate-by-diffType">
