@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.jboss.as.patching.metadata.ContentItem;
 import org.jboss.as.patching.metadata.Patch;
+import org.jboss.as.patching.runner.ContentItemFilter;
 
 /**
  * Configuration for generating a patch.

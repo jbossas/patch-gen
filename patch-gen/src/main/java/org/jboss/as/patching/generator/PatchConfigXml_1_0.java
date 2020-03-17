@@ -31,10 +31,13 @@ import static org.jboss.as.controller.parsing.ParseUtils.unexpectedElement;
 
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,6 +64,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         BUNDLES("bundles"),
         DESCRIPTION("description"),
         ELEMENT("element"),
+        EXCEPTION("exception"),
         GENERATE_BY_DIFF("generate-by-diff"),
         IN_RUNTIME_USE("in-runtime-use"),
         MISC_FILES("misc-files"),
@@ -71,6 +75,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         PATCH_CONFIG("patch-config"),
         PATH("path"),
         REMOVED("removed"),
+        SKIP_MISC_FILES("skip-misc-files"),
         SPECIFIED_CONTENT("specified-content"),
         UPDATED("updated"),
         UPGRADE("cumulative"),
@@ -396,8 +401,6 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
             }
         }
 
-        requireNoContent(reader);
-
         if (!required.isEmpty()) {
             throw missingRequired(reader, required);
         }
@@ -405,6 +408,17 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         builder.setAppliesToName(name);
         builder.setCumulativeType(appliesTo, resulting);
         builder.setSkipNonConfiguredLayers(skipNonConfiguredLayers);
+
+        while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+            final Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+                case SKIP_MISC_FILES:
+                    parseSkipMiscFiles(reader, builder);
+                    break;
+                default:
+                    throw unexpectedElement(reader);
+            }
+        }
 
         patchTypeConfigured = true;
     }
@@ -680,5 +694,23 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
         }
         builder.addOptionalPath(value, requires);
         requireNoContent(reader);
+    }
+
+    private void parseSkipMiscFiles(final XMLExtendedStreamReader reader, final PatchConfigBuilder builder) throws XMLStreamException {
+        requireNoAttributes(reader);
+
+        List<String> exceptions = new ArrayList<>();
+        while (reader.hasNext() && reader.nextTag() != END_ELEMENT) {
+            final Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+                case EXCEPTION:
+                    exceptions.add(reader.getElementText());
+                    break;
+                default:
+                    throw unexpectedElement(reader);
+            }
+        }
+
+        builder.setContentItemFilter(SkipMiscFilesContentItemFilter.create(exceptions));
     }
 }

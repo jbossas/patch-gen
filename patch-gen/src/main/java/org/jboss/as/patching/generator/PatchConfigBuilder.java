@@ -68,6 +68,7 @@ class PatchConfigBuilder implements ContentItemFilter {
     private Map<String, PatchElementConfigBuilder> elements = new LinkedHashMap<String, PatchElementConfigBuilder>();
     private List<OptionalPath> optionalPaths = Collections.emptyList();
     private boolean skipNonConfiguredLayers;
+    private ContentItemFilter contentItemFilter;
 
     PatchConfigBuilder setPatchId(String patchId) {
         this.patchId = patchId;
@@ -157,6 +158,11 @@ class PatchConfigBuilder implements ContentItemFilter {
 
     public PatchConfigBuilder setSkipNonConfiguredLayers(boolean skipNonConfiguredLayers) {
         this.skipNonConfiguredLayers = skipNonConfiguredLayers;
+        return this;
+    }
+
+    public PatchConfigBuilder setContentItemFilter(ContentItemFilter contentItemFilter) {
+        this.contentItemFilter = contentItemFilter;
         return this;
     }
 
@@ -259,6 +265,9 @@ class PatchConfigBuilder implements ContentItemFilter {
             wrapper.setPatchId(patchId);
             wrapper.setContentItemFilter(PatchConfigBuilder.this);
             wrapper.setSkipNonConfiguredLayers(skipNonConfiguredLayers);
+            if (contentItemFilter != null) {
+                wrapper.setContentItemFilter(contentItemFilter);
+            }
 
             return wrapper;
         }

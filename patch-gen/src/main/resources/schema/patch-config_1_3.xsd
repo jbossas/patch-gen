@@ -79,6 +79,9 @@
                 Cumulative patch release, invalidating all previous one-off patches
             </xs:documentation>
         </xs:annotation>
+        <xs:sequence>
+            <xs:element name="skip-misc-files" minOccurs="0" maxOccurs="1" type="skipMiscFilesType"/>
+        </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>
@@ -328,5 +331,21 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+
+    <xs:complexType name="skipMiscFilesType">
+        <xs:annotation>
+            <xs:documentation>If present the resulting patch will not include misc files, unless included</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="exception" minOccurs="0" maxOccurs="unbounded" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>
+                        Regexp matching one or more misc files that should be included anyway
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
 
 </xs:schema>
