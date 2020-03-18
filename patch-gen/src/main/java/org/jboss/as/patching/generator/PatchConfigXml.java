@@ -46,12 +46,14 @@ public class PatchConfigXml {
     static {
         MAPPER.registerRootElement(new QName(Namespace.PATCH_1_0.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name), INSTANCE);
         MAPPER.registerRootElement(new QName(Namespace.PATCH_1_2.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name), INSTANCE);
+        MAPPER.registerRootElement(new QName(Namespace.PATCH_1_3.getNamespace(), PatchConfigXml_1_0.Element.PATCH_CONFIG.name), INSTANCE);
     }
 
     enum Namespace {
 
         PATCH_1_0("urn:jboss:patch-config:1.0"),
         PATCH_1_2("urn:jboss:patch-config:1.2"),
+        PATCH_1_3("urn:jboss:patch-config:1.3"),
         UNKNOWN(null);
 
         private final String namespace;
