@@ -30,10 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -132,16 +129,19 @@ public class PatchGenerator {
             final Distribution base = Distribution.create(oldRoot, ignored);
             final Distribution updated = Distribution.create(newRoot, ignored);
 
-            if (!base.getName().equals(updated.getName())) {
-                throw processingError("distribution names don't match, expected: %s, but was %s ", base.getName(), updated.getName());
-            }
-            //
-            if (patchConfig.getAppliesToProduct() != null && ! patchConfig.getAppliesToProduct().equals(base.getName())) {
-                throw processingError("patch target does not match, expected: %s, but was %s", patchConfig.getAppliesToProduct(), base.getName());
-            }
-            //
-            if (patchConfig.getAppliesToVersion() != null && ! patchConfig.getAppliesToVersion().equals(base.getVersion())) {
-                throw processingError("patch target version does not match, expected: %s, but was %s", patchConfig.getAppliesToVersion(), base.getVersion());
+            if (!patchConfig.isOverrideIdentity()) {
+                // Only do this checks unless we are overriding the identity
+                if (!base.getName().equals(updated.getName())) {
+                    throw processingError("distribution names don't match, expected: %s, but was %s ", base.getName(), updated.getName());
+                }
+                //
+                if (patchConfig.getAppliesToProduct() != null && ! patchConfig.getAppliesToProduct().equals(base.getName())) {
+                    throw processingError("patch target does not match, expected: %s, but was %s", patchConfig.getAppliesToProduct(), base.getName());
+                }
+                //
+                if (patchConfig.getAppliesToVersion() != null && ! patchConfig.getAppliesToVersion().equals(base.getVersion())) {
+                    throw processingError("patch target version does not match, expected: %s, but was %s", patchConfig.getAppliesToVersion(), base.getVersion());
+                }
             }
 
             // Build the patch metadata
@@ -154,7 +154,16 @@ public class PatchGenerator {
                 if (base.getVersion().equals(updated.getVersion())) {
                     System.out.println("WARN: cumulative patch does not upgrade version " + base.getVersion());
                 }
-                builder.upgradeIdentity(base.getName(), base.getVersion(), updated.getVersion());
+                String name = base.getName();
+                String version = base.getVersion();
+                String toVersion = updated.getVersion();
+                if (patchConfig.isOverrideIdentity()) {
+                    // The parser checked that all these are set
+                    name = patchConfig.getAppliesToProduct();
+                    version = patchConfig.getAppliesToVersion();
+                    toVersion = patchConfig.getResultingVersion();
+                }
+                builder.upgradeIdentity(name, version, toVersion);
             } else {
                 builder.oneOffPatchIdentity(base.getName(), base.getVersion());
             }

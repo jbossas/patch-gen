@@ -110,6 +110,16 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="override-identity" type="xs:boolean" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    If true, allows us to change the values of name, applies-to-version and resulting-version, to e.g.
+                    have a totally separately named and versioned patch stream from the servers used to create the diff.
+                    If false (default) it verifies that those values match those of the inspected servers specified by
+                    the --applies-to-dist and --updated-dist command line arguments, and uses those determined values.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="generate-by-diffType">

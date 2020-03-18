@@ -119,6 +119,14 @@ public interface PatchConfig {
     Collection<OptionalPath> getOptionalPaths();
 
     /**
+     * Returns whether we should skip checking the identities of the servers used to
+     * generate the diff.
+     *
+     * @return whether to skip checking the identities
+     */
+    boolean isOverrideIdentity();
+
+    /**
      * Create a {@link PatchBuilderWrapper} whose basic metadata matches what's configured in this object.
      *
      * @return the patch builder

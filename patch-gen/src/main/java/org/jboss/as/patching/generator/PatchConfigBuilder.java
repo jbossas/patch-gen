@@ -68,7 +68,9 @@ class PatchConfigBuilder implements ContentItemFilter {
     private Map<String, PatchElementConfigBuilder> elements = new LinkedHashMap<String, PatchElementConfigBuilder>();
     private List<OptionalPath> optionalPaths = Collections.emptyList();
     private boolean skipNonConfiguredLayers;
+    private boolean overrideIdentity;
     private ContentItemFilter contentItemFilter;
+
 
     PatchConfigBuilder setPatchId(String patchId) {
         this.patchId = patchId;
@@ -166,6 +168,12 @@ class PatchConfigBuilder implements ContentItemFilter {
         return this;
     }
 
+    public PatchConfigBuilder setOverrideIdentity(boolean overrideIdentity) {
+        this.overrideIdentity = overrideIdentity;
+        return this;
+    }
+
+
     PatchConfig build() {
         return new PatchConfigImpl(new ArrayList<PatchElementConfig>(elements.values()));
     }
@@ -233,6 +241,10 @@ class PatchConfigBuilder implements ContentItemFilter {
             return optionalPaths;
         }
 
+        @Override
+        public boolean isOverrideIdentity() {
+            return overrideIdentity;
+        }
 
         @Override
         public PatchBuilderWrapper toPatchBuilder() {
