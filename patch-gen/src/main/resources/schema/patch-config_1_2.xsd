@@ -300,7 +300,7 @@
     </xs:complexType>
 
     <xs:complexType name="optionalPathType">
-        <xs:attribute name="value" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>
                     Path relative to the installation root with '/' as a name-separator character
@@ -309,7 +309,7 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="requires" type="xs:string"/>
+        <xs:attribute name="requires" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
                     Path relative to the installation root with '/' as a name-separator character
