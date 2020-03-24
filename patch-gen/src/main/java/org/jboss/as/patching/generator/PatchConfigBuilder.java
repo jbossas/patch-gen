@@ -48,6 +48,7 @@ import org.jboss.as.patching.runner.ContentItemFilter;
  */
 class PatchConfigBuilder implements ContentItemFilter {
 
+
     public static enum AffectsType {
         UPDATED,
         ORIGINAL,
@@ -66,6 +67,10 @@ class PatchConfigBuilder implements ContentItemFilter {
     private Set<ContentItem> specifiedContent = new HashSet<ContentItem>();
     private Map<String, PatchElementConfigBuilder> elements = new LinkedHashMap<String, PatchElementConfigBuilder>();
     private List<OptionalPath> optionalPaths = Collections.emptyList();
+    private boolean skipNonConfiguredLayers;
+    private boolean overrideIdentity;
+    private ContentItemFilter contentItemFilter;
+
 
     PatchConfigBuilder setPatchId(String patchId) {
         this.patchId = patchId;
@@ -153,6 +158,22 @@ class PatchConfigBuilder implements ContentItemFilter {
         return this;
     }
 
+    public PatchConfigBuilder setSkipNonConfiguredLayers(boolean skipNonConfiguredLayers) {
+        this.skipNonConfiguredLayers = skipNonConfiguredLayers;
+        return this;
+    }
+
+    public PatchConfigBuilder setContentItemFilter(ContentItemFilter contentItemFilter) {
+        this.contentItemFilter = contentItemFilter;
+        return this;
+    }
+
+    public PatchConfigBuilder setOverrideIdentity(boolean overrideIdentity) {
+        this.overrideIdentity = overrideIdentity;
+        return this;
+    }
+
+
     PatchConfig build() {
         return new PatchConfigImpl(new ArrayList<PatchElementConfig>(elements.values()));
     }
@@ -221,6 +242,11 @@ class PatchConfigBuilder implements ContentItemFilter {
         }
 
         @Override
+        public boolean isOverrideIdentity() {
+            return overrideIdentity;
+        }
+
+        @Override
         public PatchBuilderWrapper toPatchBuilder() {
             final PatchBuilderWrapper wrapper = new PatchBuilderWrapper() {
                 @Override
@@ -250,6 +276,10 @@ class PatchConfigBuilder implements ContentItemFilter {
             wrapper.setDescription(description);
             wrapper.setPatchId(patchId);
             wrapper.setContentItemFilter(PatchConfigBuilder.this);
+            wrapper.setSkipNonConfiguredLayers(skipNonConfiguredLayers);
+            if (contentItemFilter != null) {
+                wrapper.setContentItemFilter(contentItemFilter);
+            }
 
             return wrapper;
         }

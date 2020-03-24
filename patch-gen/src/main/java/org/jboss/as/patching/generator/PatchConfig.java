@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.jboss.as.patching.metadata.ContentItem;
 import org.jboss.as.patching.metadata.Patch;
+import org.jboss.as.patching.runner.ContentItemFilter;
 
 /**
  * Configuration for generating a patch.
@@ -116,6 +117,14 @@ public interface PatchConfig {
      * @return  optional paths
      */
     Collection<OptionalPath> getOptionalPaths();
+
+    /**
+     * Returns whether we should skip checking the identities of the servers used to
+     * generate the diff.
+     *
+     * @return whether to skip checking the identities
+     */
+    boolean isOverrideIdentity();
 
     /**
      * Create a {@link PatchBuilderWrapper} whose basic metadata matches what's configured in this object.
