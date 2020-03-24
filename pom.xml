@@ -7,12 +7,12 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>26</version>
+        <version>36</version>
     </parent>
 
     <groupId>org.jboss.as</groupId>
     <artifactId>patch-gen-parent</artifactId>
-    <version>2.1.0.Alpha1-SNAPSHOT</version>
+    <version>2.1.0.Final</version>
     <packaging>pom</packaging>
 
     <name>JBoss patch-gen Build Aggregator</name>
@@ -27,8 +27,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Build configuration -->
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
 
         <!--
             Dependency versions. Please keep alphabetical.
@@ -153,7 +153,7 @@
         <repository>
             <id>jboss-public-repository-group</id>
             <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
             <layout>default</layout>
             <releases>
                 <enabled>true</enabled>
@@ -167,7 +167,7 @@
         <repository>
             <id>jboss-product-repository</id>
             <name>JBoss Internal Product Repository</name>
-            <url>http://download.lab.bos.redhat.com/brewroot/repos/jb-eap-6-rhel-6-build/latest/maven/</url>
+            <url>https://download.lab.bos.redhat.com/brewroot/repos/jb-eap-6-rhel-6-build/latest/maven/</url>
             <layout>default</layout>
             <releases>
                 <enabled>true</enabled>
@@ -184,7 +184,7 @@
         <pluginRepository>
             <id>jboss-public-repository-group</id>
             <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
