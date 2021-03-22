@@ -45,7 +45,7 @@
         <version.org.apache.maven.shared.maven-shared-utils>3.1.0</version.org.apache.maven.shared.maven-shared-utils>
         <version.org.apache.maven.plugin-tools.maven-plugin-annotations>3.2</version.org.apache.maven.plugin-tools.maven-plugin-annotations>
         <version.org.apache.maven.maven-plugin-api>2.0</version.org.apache.maven.maven-plugin-api>
-        <version.junit>4.11</version.junit>
+        <version.junit>4.13.1</version.junit>
 
         <!-- Surefire args -->
         <surefire.jpda.args/>
