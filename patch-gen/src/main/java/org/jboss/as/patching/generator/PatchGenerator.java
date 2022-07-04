@@ -165,7 +165,13 @@ public class PatchGenerator {
                 }
                 builder.upgradeIdentity(name, version, toVersion);
             } else {
-                builder.oneOffPatchIdentity(base.getName(), base.getVersion());
+                if (patchConfig.isOverrideIdentity()) {
+                    // This allows to build one-off patch based on "name" and "applies-to-version", to e.g.
+                    // have a totally separately named and versioned patch stream from the servers used to create the diff.
+                    builder.oneOffPatchIdentity(patchConfig.getAppliesToProduct(), patchConfig.getAppliesToVersion());
+                } else {
+                    builder.oneOffPatchIdentity(base.getName(), base.getVersion());
+                }
             }
 
             // Create the resulting patch

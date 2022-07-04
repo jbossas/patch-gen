@@ -443,6 +443,7 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
 
         String name = null;
         String appliesTo = null;
+        boolean overrideIdentity = false;
 
         Set<Attribute> required = Collections.emptySet(); // EnumSet.of(Attribute.APPLIES_TO_VERSION, Attribute.RESULTING_VERSION);
 
@@ -458,6 +459,9 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
                 case APPLIES_TO_VERSION:
                     appliesTo = value;
                     break;
+                case OVERRIDE_IDENTITY:;
+                    overrideIdentity = Boolean.parseBoolean(value);
+                    break;
                 default:
                     throw unexpectedAttribute(reader, i);
             }
@@ -469,8 +473,17 @@ class PatchConfigXml_1_0 implements XMLStreamConstants, XMLElementReader<PatchCo
             throw missingRequired(reader, required);
         }
 
+        if (overrideIdentity && (name == null || appliesTo == null)) {
+            String msg = String.format("When %s=\"true\", all of %s and %s must be set",
+                    Attribute.OVERRIDE_IDENTITY.name,
+                    Attribute.NAME.name,
+                    Attribute.APPLIES_TO_VERSION.name);
+            throw new XMLStreamException(msg, reader.getLocation());
+        }
+
         builder.setOneOffType(appliesTo);
         builder.setAppliesToName(name);
+        builder.setOverrideIdentity(overrideIdentity);
 
         patchTypeConfigured = true;
     }
