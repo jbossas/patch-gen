@@ -40,6 +40,8 @@ import java.util.Set;
 import org.jboss.as.patching.metadata.Patch;
 import org.junit.Test;
 
+import javax.xml.stream.XMLStreamException;
+
 /**
  * @author Brian Stansberry (c) 2012 Red Hat Inc.
  */
@@ -81,6 +83,33 @@ public class PatchConfigXmlUnitTestCase {
         validateAppliesTo(patchConfig, "1.2.3");
 
         validateInRuntimeUse(patchConfig);
+    }
+
+    @Test
+    public void testOneOffGeneratedWithOverride() throws Exception {
+
+        final InputStream is = getResource("test-config05.xml");
+        final PatchConfig patchConfig = PatchConfigXml.parse(is);
+        // Patch
+        assertNotNull(patchConfig);
+        assertEquals("patch-12345", patchConfig.getPatchId());
+        assertEquals("patch description", patchConfig.getDescription());
+        assertEquals("Test", patchConfig.getAppliesToProduct());
+        assertEquals(true, patchConfig.isOverrideIdentity());
+
+        assertNotNull(patchConfig.getPatchType());
+        assertEquals(Patch.PatchType.ONE_OFF, patchConfig.getPatchType());
+        assertTrue(patchConfig.isGenerateByDiff());
+        assertNull(patchConfig.getResultingVersion());
+
+        validateAppliesTo(patchConfig, "1.2.3");
+    }
+
+    @Test(expected = XMLStreamException.class)
+    // Missing required name and applies-to-version attributes cause an exception.
+    public void testOneOffGeneratedRequiredAttribute() throws Exception {
+        final InputStream is = getResource("test-config06.xml");
+        final PatchConfig patchConfig = PatchConfigXml.parse(is);
     }
 
     @Test
