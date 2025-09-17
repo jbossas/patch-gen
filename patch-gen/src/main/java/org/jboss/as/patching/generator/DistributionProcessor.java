@@ -95,13 +95,16 @@ class DistributionProcessor {
             final Class<?> clazz = module.getClassLoader().loadClass("org.jboss.as.version.ProductConfig");
             final Method resolveName = clazz.getMethod("resolveName");
             final Method resolveVersion  = clazz.getMethod("resolveVersion");
-            final Constructor<?> constructor = clazz.getConstructor(ModuleLoader.class, String.class, Map.class);
-
-            final Object productConfig = constructor.newInstance(loader, distributionRoot.getAbsolutePath(), Collections.emptyMap());
-
+            Object productConfig = null;
+            try {
+                final Method fromFilesystemSlot = clazz.getMethod("fromFilesystemSlot", ModuleLoader.class, String.class, Map.class);
+                productConfig = fromFilesystemSlot.invoke(null, loader, distributionRoot.getAbsolutePath(), Collections.emptyMap());
+            } catch (NoSuchMethodException e) {
+                final Constructor<?> constructor = clazz.getConstructor(ModuleLoader.class, String.class, Map.class);
+                productConfig = constructor.newInstance(loader, distributionRoot.getAbsolutePath(), Collections.emptyMap());
+            }
             distribution.setName((String) resolveName.invoke(productConfig));
             distribution.setVersion((String) resolveVersion.invoke(productConfig));
-
         } catch (Exception e) {
             throw new IOException(e);
         }
